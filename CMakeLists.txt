@@ -10,3 +10,5 @@ SET(SRC
   )
 
 add_executable(9cc ${SRC})
+
+add_subdirectory(test)

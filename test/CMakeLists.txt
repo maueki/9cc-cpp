@@ -1,0 +1,20 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
+PROJECT(unit_test)
+
+ADD_DEFINITIONS(-DUNIT_TEST)
+
+INCLUDE_DIRECTORIES(
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src
+  )
+
+SET(SRC
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src/parse.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src/token.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src/codegen.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src/util.cpp
+
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/parse_test.cpp
+  )
+
+ADD_EXECUTABLE(${PROJECT_NAME} ${SRC})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} -lgtest -lgtest_main -lpthread)
