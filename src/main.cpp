@@ -102,6 +102,24 @@ int consume(int ty) {
 
 static Node *mul();
 static Node *term();
+static Node *unary();
+
+/// syntax
+///
+/// add: mul
+/// add: add "+" mul
+/// add: add "-" mul
+///
+/// mul: unary
+/// mul: mul "*" unary
+/// mul: mul "/" unary
+///
+/// unary: term
+/// unary: "+" term
+/// unary: "-" term
+///
+/// term: num
+/// term: "(" add ")"
 
 Node *add() {
     Node *node = mul();
@@ -117,16 +135,24 @@ Node *add() {
 }
 
 Node *mul() {
-    Node *node = term();
+    Node *node = unary();
 
     for (;;) {
         if (consume('*'))
-            node = new_node('*', node, term());
+            node = new_node('*', node, unary());
         else if (consume('/'))
-            node = new_node('/', node, term());
+            node = new_node('/', node, unary());
         else
             return node;
     }
+}
+
+Node *unary() {
+    if (consume('+'))
+        return term();
+    if (consume('-'))
+        return new_node('-', new_node_num(0), term());
+    return term();
 }
 
 Node *term() {
