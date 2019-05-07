@@ -15,7 +15,7 @@ static std::tuple<const char *, int> symbols[] = {
 Token tokens[100];
 
 // pが指している文字列をトークンに分割してtokensに保存する
-void tokenize(char *p) {
+void tokenize(const char *p) {
     int i = 0;
 loop:
     while (*p) {
@@ -48,7 +48,9 @@ loop:
         if (isdigit(*p)) {
             tokens[i].ty = TK_NUM;
             tokens[i].input = p;
-            tokens[i].val = strtol(p, &p, 10);
+            char *tmp = nullptr;
+            tokens[i].val = strtol(p, &tmp, 10);
+            p = tmp;
             i++;
             continue;
         }

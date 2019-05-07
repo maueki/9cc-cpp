@@ -30,7 +30,7 @@ struct Node {
 
 extern Token tokens[100];
 
-void tokenize(char *p);
+void tokenize(const char *p);
 Node *parse();
 void gen(Node *node);
 
