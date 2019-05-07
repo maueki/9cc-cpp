@@ -47,8 +47,20 @@ TEST_F(ParseTest, equality_test)
         tokenize("1==2");
         parser_init();
         Node* actual = equality();
+        Node *expect = new Node{ND_EQ, new Node{ND_NUM, nullptr, nullptr, 1},
+                                new Node{ND_NUM, nullptr, nullptr, 2}, 0};
+        EXPECT_EQ(*actual, *expect);
+    }
+
+    {
+        tokenize("1<2==2");
+        parser_init();
+        Node* actual = equality();
         Node* expect = new Node{ND_EQ,
-                                new Node{ND_NUM, nullptr, nullptr, 1},
+                                new Node{'<',
+                                         new Node{ND_NUM, nullptr, nullptr, 1},
+                                         new Node{ND_NUM, nullptr, nullptr, 2},
+                                         0},
                                 new Node{ND_NUM, nullptr, nullptr, 2}, 0};
         EXPECT_EQ(*actual, *expect);
     }

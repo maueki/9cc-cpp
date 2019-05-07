@@ -16,6 +16,7 @@ int consume(int ty) {
     return 1;
 }
 
+Node *relational();
 Node *add();
 Node *mul();
 Node *term();
@@ -23,9 +24,15 @@ Node *unary();
 
 /// syntax
 ///
-/// equality: add
-/// euqality: euqality "==" add
-/// euqality: euqality "!=" add
+/// equality: relational
+/// euqality: euqality "==" relational
+/// euqality: euqality "!=" relational
+///
+/// relational: add
+/// relational: relational "<" add
+/// relational: relational "<=" add
+/// relational: relational ">" add
+/// relational: relational ">=" add
 ///
 /// add: mul
 /// add: add "+" mul
@@ -43,13 +50,30 @@ Node *unary();
 /// term: "(" equality ")"
 
 Node *equality() {
-    Node *node = add();
+    Node *node = relational();
 
     for (;;) {
         if (consume(TK_EQ))
-            node = new_node(ND_EQ, node, add());
+            node = new_node(ND_EQ, node, relational());
         else if (consume(TK_NE))
-            node = new_node(ND_NE, node, add());
+            node = new_node(ND_NE, node, relational());
+        else
+            return node;
+    }
+}
+
+Node *relational() {
+    Node *node = add();
+
+    for (;;) {
+        if (consume('<'))
+            node = new_node('<', node, add());
+        else if (consume(TK_LE))
+            node = new_node(ND_LE, node, add());
+        else if (consume('>'))
+            node = new_node('>', node, add());
+        else if (consume(TK_GE))
+            node = new_node(ND_GE, node, add());
         else
             return node;
     }
