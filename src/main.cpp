@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <cstring>
 
+static int pos;
+
 // トークンの型を表す値
 enum {
     TK_NUM = 256,  // 整数トークン
@@ -20,6 +22,17 @@ struct Token {
 // トークナイズした結果のトークン列はこの配列に保存する
 // 100個以上のトークンは来ないものとする
 Token tokens[100];
+
+enum {
+    ND_NUM = 256,  // 整数のノードの型
+};
+
+struct Node {
+    int ty;            // 演算子かND_NUM
+    struct Node *lhs;  // 左辺
+    struct Node *rhs;  // 右辺
+    int val;           // tyがND_NUMの場合のみ使う
+};
 
 // エラーを報告するための関数
 // printfと同じ引数を取る
@@ -63,6 +76,74 @@ void tokenize(char *p) {
 
     tokens[i].ty = TK_EOF;
     tokens[i].input = p;
+}
+
+Node *new_node(int ty, Node *lhs, Node *rhs) {
+    auto *node = new Node;
+    node->ty = ty;
+    node->lhs = lhs;
+    node->rhs = rhs;
+    return node;
+}
+
+Node *new_node_num(int val) {
+    auto *node = new Node;
+    node->ty = ND_NUM;
+    node->val = val;
+    return node;
+}
+
+int consume(int ty) {
+    if (tokens[pos].ty != ty) return 0;
+    pos++;
+    return 1;
+}
+
+static Node* mul();
+static Node* term();
+
+Node *add() {
+    Node *node = mul();
+
+    for (;;) {
+        if (consume('+'))
+            node = new_node('+', node, mul());
+        else if (consume('-'))
+            node = new_node('-', node, mul());
+        else
+            return node;
+    }
+}
+
+Node *mul() {
+    Node *node = term();
+
+    for (;;) {
+        if (consume('*'))
+            node = new_node('*', node, term());
+        else if (consume('/'))
+            node = new_node('/', node, term());
+        else
+            return node;
+    }
+}
+
+Node *term() {
+    // 次のトークンが'('なら、"(" add ")"のはず
+    if (consume('(')) {
+        Node *node = add();
+        if (!consume(')'))
+            error("開きカッコに対応する閉じカッコがありません: %s",
+                  tokens[pos].input);
+        return node;
+    }
+
+    // そうでなければ数値のはず
+    if (tokens[pos].ty == TK_NUM) return new_node_num(tokens[pos++].val);
+
+    error("数値でも開きカッコでもないトークンです: %s", tokens[pos].input);
+
+    return nullptr; // unreachable
 }
 
 int main(int argc, char **argv) {
