@@ -3,18 +3,11 @@
 static int pos;
 
 Node *new_node(int ty, Node *lhs, Node *rhs) {
-    auto *node = new Node;
-    node->ty = ty;
-    node->lhs = lhs;
-    node->rhs = rhs;
-    return node;
+    return new Node{ty, lhs, rhs, 0};
 }
 
 Node *new_node_num(int val) {
-    auto *node = new Node;
-    node->ty = ND_NUM;
-    node->val = val;
-    return node;
+    return new Node{ND_NUM, nullptr, nullptr, val};
 }
 
 int consume(int ty) {
@@ -100,3 +93,9 @@ Node *parse() {
     pos = 0;
     return add();
 }
+
+#ifdef UNIT_TEST
+void parser_init() {
+    pos = 0;
+}
+#endif
