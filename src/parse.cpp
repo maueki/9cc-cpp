@@ -133,7 +133,7 @@ Node *term() {
 
 Node *parse() {
     pos = 0;
-    return add();
+    return equality();
 }
 
 #ifdef UNIT_TEST
