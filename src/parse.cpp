@@ -16,11 +16,16 @@ int consume(int ty) {
     return 1;
 }
 
-static Node *mul();
-static Node *term();
-static Node *unary();
+Node *add();
+Node *mul();
+Node *term();
+Node *unary();
 
 /// syntax
+///
+/// equality: add
+/// euqality: euqality "==" add
+/// euqality: euqality "!=" add
 ///
 /// add: mul
 /// add: add "+" mul
@@ -35,7 +40,20 @@ static Node *unary();
 /// unary: "-" term
 ///
 /// term: num
-/// term: "(" add ")"
+/// term: "(" equality ")"
+
+Node *equality() {
+    Node *node = add();
+
+    for (;;) {
+        if (consume(TK_EQ))
+            node = new_node(ND_EQ, node, add());
+        else if (consume(TK_NE))
+            node = new_node(ND_NE, node, add());
+        else
+            return node;
+    }
+}
 
 Node *add() {
     Node *node = mul();
@@ -74,7 +92,7 @@ Node *unary() {
 Node *term() {
     // 次のトークンが'('なら、"(" add ")"のはず
     if (consume('(')) {
-        Node *node = add();
+        Node *node = equality();
         if (!consume(')'))
             error("開きカッコに対応する閉じカッコがありません: %s",
                   tokens[pos].input);
