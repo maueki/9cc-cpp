@@ -54,7 +54,8 @@ void tokenize(char *p) {
             continue;
         }
 
-        if (*p == '+' || *p == '-') {
+        if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
+            *p == ')') {
             tokens[i].ty = *p;
             tokens[i].input = p;
             i++;
@@ -99,8 +100,8 @@ int consume(int ty) {
     return 1;
 }
 
-static Node* mul();
-static Node* term();
+static Node *mul();
+static Node *term();
 
 Node *add() {
     Node *node = mul();
@@ -143,53 +144,60 @@ Node *term() {
 
     error("数値でも開きカッコでもないトークンです: %s", tokens[pos].input);
 
-    return nullptr; // unreachable
+    return nullptr;  // unreachable
+}
+
+void gen(Node *node) {
+    if (node->ty == ND_NUM) {
+        printf("  push %d\n", node->val);
+        return;
+    }
+
+    gen(node->lhs);
+    gen(node->rhs);
+
+    printf("  pop rdi\n");
+    printf("  pop rax\n");
+
+    switch (node->ty) {
+    case '+':
+        printf("  add rax, rdi\n");
+        break;
+    case '-':
+        printf("  sub rax, rdi\n");
+        break;
+    case '*':
+        printf("  mul rdi\n");
+        break;
+    case '/':
+        printf("  mov rdx, 0\n");
+        printf("  div rdi\n");
+    }
+
+    printf("  push rax\n");
 }
 
 int main(int argc, char **argv) {
-    if (argc != 2) {
-        error("引数の個数が正しくありません");
-        return 1;
-    }
+  if (argc != 2) {
+    fprintf(stderr, "引数の個数が正しくありません\n");
+    return 1;
+  }
 
-    // トークナイズする
-    tokenize(argv[1]);
+  // トークナイズしてパースする
+  tokenize(argv[1]);
+  Node *node = add();
 
-    // アセンブリの前半部分を出力
-    printf(".intel_syntax noprefix\n");
-    printf(".global main\n");
-    printf("main:\n");
+  // アセンブリの前半部分を出力
+  printf(".intel_syntax noprefix\n");
+  printf(".global main\n");
+  printf("main:\n");
 
-    // 式の最初は数でなければならないので、それをチェックして
-    // 最初のmov命令を出力
-    if (tokens[0].ty != TK_NUM) error("最初の項が数ではありません");
-    printf("  mov rax, %d\n", tokens[0].val);
+  // 抽象構文木を下りながらコード生成
+  gen(node);
 
-    // `+ <数>`あるいは`- <数>`というトークンの並びを消費しつつ
-    // アセンブリを出力
-    int i = 1;
-    while (tokens[i].ty != TK_EOF) {
-        if (tokens[i].ty == '+') {
-            i++;
-            if (tokens[i].ty != TK_NUM)
-                error("予期しないトークンです: %s", tokens[i].input);
-            printf("  add rax, %d\n", tokens[i].val);
-            i++;
-            continue;
-        }
-
-        if (tokens[i].ty == '-') {
-            i++;
-            if (tokens[i].ty != TK_NUM)
-                error("予期しないトークンです: %s", tokens[i].input);
-            printf("  sub rax, %d\n", tokens[i].val);
-            i++;
-            continue;
-        }
-
-        error("予期しないトークンです: %s", tokens[i].input);
-    }
-
-    printf("  ret\n");
-    return 0;
+  // スタックトップに式全体の値が残っているはずなので
+  // それをRAXにロードして関数からの返り値とする
+  printf("  pop rax\n");
+  printf("  ret\n");
+  return 0;
 }
