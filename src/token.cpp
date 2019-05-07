@@ -35,8 +35,14 @@ loop:
         }
 
         if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
-            *p == ')' || *p == '<' || *p == '>') {
+            *p == ')' || *p == '<' || *p == '>' || *p == '=' || *p == ';') {
             tokens.push_back(Token{*p, 0, p});
+            p++;
+            continue;
+        }
+
+        if ('a' <= *p && *p <= 'z') {
+            tokens.push_back(Token{TK_IDENT, 0, p});
             p++;
             continue;
         }

@@ -3,11 +3,15 @@
 static int pos;
 
 Node *new_node(int ty, Node *lhs, Node *rhs) {
-    return new Node{ty, lhs, rhs, 0};
+    return new Node{ty, lhs, rhs, 0, 0};
 }
 
 Node *new_node_num(int val) {
-    return new Node{ND_NUM, nullptr, nullptr, val};
+    return new Node{ND_NUM, nullptr, nullptr, val, 0};
+}
+
+Node *new_node_ident(char c) {
+    return new Node{ND_IDENT, nullptr, nullptr, 0, c};
 }
 
 int consume(int ty) {
@@ -16,6 +20,9 @@ int consume(int ty) {
     return 1;
 }
 
+Node *stmt();
+Node *assign();
+Node *equality();
 Node *relational();
 Node *add();
 Node *mul();
@@ -23,6 +30,14 @@ Node *term();
 Node *unary();
 
 /// syntax
+///
+/// program: stmt program;
+/// program: ε
+///
+/// stmt: assign ";"
+///
+/// assign: equality
+/// assign: equality "=" assign
 ///
 /// equality: relational
 /// euqality: euqality "==" relational
@@ -47,7 +62,30 @@ Node *unary();
 /// unary: "-" term
 ///
 /// term: num
-/// term: "(" equality ")"
+/// term: "(" assign ")"Node *assign() {
+
+std::vector<Node*> program() {
+    std::vector<Node*> code;
+
+    while (tokens[pos].ty != TK_EOF)
+        code.push_back(stmt());
+
+    return code;
+}
+
+Node *stmt() {
+    Node *node = assign();
+    if (!consume(';'))
+        error("';'ではないトークンです: %s", tokens[pos].input);
+    return node;
+}
+
+Node* assign() {
+    Node *node = equality();
+    if (consume('='))
+        node = new_node('=', node, assign());
+    return node;
+}
 
 Node *equality() {
     Node *node = relational();
@@ -123,17 +161,18 @@ Node *term() {
         return node;
     }
 
-    // そうでなければ数値のはず
+    if (tokens[pos].ty == TK_IDENT) return new_node_ident(*tokens[pos++].input);
+
     if (tokens[pos].ty == TK_NUM) return new_node_num(tokens[pos++].val);
 
-    error("数値でも開きカッコでもないトークンです: %s", tokens[pos].input);
+    error("想定外のトークンです: %s", tokens[pos].input);
 
     return nullptr;  // unreachable
 }
 
-Node *parse() {
+std::vector<Node*> parse() {
     pos = 0;
-    return equality();
+    return program();
 }
 
 #ifdef UNIT_TEST

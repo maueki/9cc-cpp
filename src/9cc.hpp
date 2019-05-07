@@ -3,6 +3,7 @@
 // トークンの型を表す値
 enum {
     TK_NUM = 256, //! 整数トークン
+    TK_IDENT,     //! 識別子
     TK_EQ,        //! ==
     TK_NE,        //! !=
     TK_LE,        //! <=
@@ -19,6 +20,7 @@ struct Token {
 
 enum {
     ND_NUM = 256,  //! 整数のノードの型
+    ND_IDENT,      //! 識別子のノードの型
     ND_EQ,         //! ==
     ND_NE,         //! !=
     ND_LE,         //! <=
@@ -30,12 +32,13 @@ struct Node {
     struct Node *lhs;  // 左辺
     struct Node *rhs;  // 右辺
     int val;           // tyがND_NUMの場合のみ使う
+    char name;         // tyがND_IDENTの場合のみ使う
 };
 
 extern std::vector<Token> tokens;
 
 void tokenize(const char *p);
-Node *parse();
+std::vector<Node*> parse();
 void gen(Node *node);
 
 void error(const char *fmt, ...);
