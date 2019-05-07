@@ -1,3 +1,5 @@
+#include <vector>
+
 // トークンの型を表す値
 enum {
     TK_NUM = 256, //! 整数トークン
@@ -30,7 +32,7 @@ struct Node {
     int val;           // tyがND_NUMの場合のみ使う
 };
 
-extern Token tokens[100];
+extern std::vector<Token> tokens;
 
 void tokenize(const char *p);
 Node *parse();
