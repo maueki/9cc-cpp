@@ -1,24 +1,43 @@
 #include <cstdio>
+#include <unordered_map>
+#include <string>
 
 #include "9cc.hpp"
 
-void gen_lval(Node *node) {
+struct GenContext {
+    std::unordered_map<std::string, int> vars;
+    int current_offset=0;
+
+    int var_put(const std::string& var) {
+        auto iter = vars.find(var);
+        if (iter != vars.end()) {
+            return iter->second;
+        }
+
+        current_offset += 8;
+        vars.insert({var, current_offset});
+        return current_offset;
+    }
+};
+
+
+void gen_lval(Node *node, GenContext& context) {
     if (node->ty != ND_IDENT) error("代入の左辺値が変数ではありません");
 
-    //FIXME:    int offset = ('z' - node->name + 1) * 8;
-    //printf("  mov rax, rbp\n");
-    //printf("  sub rax, %d\n", offset);
-    //printf("  push rax\n");
+    int offset = context.var_put(node->name);
+    printf("  mov rax, rbp\n");
+    printf("  sub rax, %d\n", offset);
+    printf("  push rax\n");
 }
 
-void gen(Node *node) {
+void gen(Node *node, GenContext& context) {
     if (node->ty == ND_NUM) {
         printf("  push %d\n", node->val);
         return;
     }
 
     if (node->ty == ND_IDENT) {
-        gen_lval(node);
+        gen_lval(node, context);
         printf("  pop rax\n");
         printf("  mov rax, [rax]\n");
         printf("  push rax\n");
@@ -26,8 +45,8 @@ void gen(Node *node) {
     }
 
     if (node->ty == '=') {
-        gen_lval(node->lhs);
-        gen(node->rhs);
+        gen_lval(node->lhs, context);
+        gen(node->rhs, context);
 
         printf("  pop rdi\n");
         printf("  pop rax\n");
@@ -37,7 +56,7 @@ void gen(Node *node) {
     }
 
     if (node->ty == ND_RETURN) {
-        gen(node->lhs);
+        gen(node->lhs, context);
         printf("  pop rax\n");
         printf("  mov rsp, rbp\n");
         printf("  pop rbp\n");
@@ -45,8 +64,8 @@ void gen(Node *node) {
         return;
     }
 
-    gen(node->lhs);
-    gen(node->rhs);
+    gen(node->lhs, context);
+    gen(node->rhs, context);
 
     printf("  pop rdi\n");
     printf("  pop rax\n");
@@ -98,4 +117,13 @@ void gen(Node *node) {
     }
 
     printf("  push rax\n");
+}
+
+void code_gen(std::vector<Node*>& code) {
+    auto context = GenContext{};
+
+    for(auto& c: code) {
+        gen(c, context);
+        printf("  pop rax\n");
+    }
 }

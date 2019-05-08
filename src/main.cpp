@@ -23,10 +23,7 @@ int main(int argc, char **argv) {
     printf("  mov rbp, rsp\n");
     printf("  sub rsp, 208\n");
 
-    for(auto& c: code) {
-        gen(c);
-        printf("  pop rax\n");
-    }
+    code_gen(code);
 
     // エピローグ
     // 最後の式の結果がRAXに残っているのでそれが返り値になる

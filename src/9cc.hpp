@@ -43,6 +43,6 @@ extern std::vector<Token> tokens;
 
 void tokenize(const char *p);
 std::vector<Node*> parse();
-void gen(Node *node);
+void code_gen(std::vector<Node*>& code);
 
 void error(const char *fmt, ...);

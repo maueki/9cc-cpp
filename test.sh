@@ -43,5 +43,6 @@ try 1 '2<1+2;'
 try 2 'a=2;a;'
 try 6 'a=2;b=3;a*b;'
 try 3 'a=1;b=2;return a+b;a;'
+try 3 'foo = 1; bar = foo + 1;return foo + bar ;'
 
 echo OK
