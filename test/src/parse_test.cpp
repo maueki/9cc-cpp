@@ -3,6 +3,7 @@
 #include "9cc.hpp"
 
 void parser_init();
+Node* stmt();
 Node* assign();
 Node* equality();
 Node* add();
@@ -103,3 +104,13 @@ TEST_F(ParseTest, assign_test)
     }
 }
 
+TEST_F(ParseTest, stmt_test)
+{
+    {
+        tokenize("return a+b;");
+        parser_init();
+        Node* actual = stmt();
+        Node* expect = node(ND_RETURN, node('+', node_ident('a'), node_ident('b')), nullptr);
+        EXPECT_EQ(*actual, *expect);
+    }
+}

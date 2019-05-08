@@ -8,6 +8,7 @@ enum {
     TK_NE,        //! !=
     TK_LE,        //! <=
     TK_GE,        //! >=
+    TK_RETURN,    //! return
     TK_EOF,       //! 入力の終わりを表すトークン
 };
 
@@ -25,6 +26,7 @@ enum {
     ND_NE,         //! !=
     ND_LE,         //! <=
     ND_GE,         //! >=
+    ND_RETURN,     //! return
 };
 
 struct Node {

@@ -14,6 +14,10 @@ Node *new_node_ident(char c) {
     return new Node{ND_IDENT, nullptr, nullptr, 0, c};
 }
 
+Node *new_node_return(Node* lhs) {
+    return new Node{ND_RETURN, lhs, nullptr, 0, 0};
+}
+
 int consume(int ty) {
     if (tokens[pos].ty != ty) return 0;
     pos++;
@@ -34,6 +38,7 @@ Node *unary();
 /// program: stmt program;
 /// program: ε
 ///
+/// stmt: "return" assign ";"
 /// stmt: assign ";"
 ///
 /// assign: equality
@@ -74,7 +79,14 @@ std::vector<Node*> program() {
 }
 
 Node *stmt() {
-    Node *node = assign();
+    Node *node;
+
+    if (consume(TK_RETURN)) {
+        node = new_node_return(assign());
+    } else {
+        node =assign();
+    }
+
     if (!consume(';'))
         error("';'ではないトークンです: %s", tokens[pos].input);
     return node;
