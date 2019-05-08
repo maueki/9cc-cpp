@@ -3,19 +3,19 @@
 static int pos;
 
 Node *new_node(int ty, Node *lhs, Node *rhs) {
-    return new Node{ty, lhs, rhs, 0, 0};
+    return new Node{ty, lhs, rhs, 0, std::string()};
 }
 
 Node *new_node_num(int val) {
-    return new Node{ND_NUM, nullptr, nullptr, val, 0};
+    return new Node{ND_NUM, nullptr, nullptr, val, std::string()};
 }
 
-Node *new_node_ident(char c) {
-    return new Node{ND_IDENT, nullptr, nullptr, 0, c};
+Node *new_node_ident(const std::string &s) {
+    return new Node{ND_IDENT, nullptr, nullptr, 0, s};
 }
 
 Node *new_node_return(Node* lhs) {
-    return new Node{ND_RETURN, lhs, nullptr, 0, 0};
+    return new Node{ND_RETURN, lhs, nullptr, 0, std::string()};
 }
 
 int consume(int ty) {
@@ -173,7 +173,7 @@ Node *term() {
         return node;
     }
 
-    if (tokens[pos].ty == TK_IDENT) return new_node_ident(*tokens[pos++].input);
+    if (tokens[pos].ty == TK_IDENT) return new_node_ident(tokens[pos++].name);
 
     if (tokens[pos].ty == TK_NUM) return new_node_num(tokens[pos++].val);
 

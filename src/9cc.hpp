@@ -1,4 +1,5 @@
 #include <vector>
+#include <string>
 
 // トークンの型を表す値
 enum {
@@ -16,6 +17,7 @@ enum {
 struct Token {
     int ty;       //! トークンの型
     int val;      //! tyがTK_NUMの場合、その数値
+    std::string name;   //! tyがTK_IDENTの場合、その名前
     const char *input;  //! トークン文字列（エラーメッセージ用）
 };
 
@@ -34,7 +36,7 @@ struct Node {
     struct Node *lhs;  // 左辺
     struct Node *rhs;  // 右辺
     int val;           // tyがND_NUMの場合のみ使う
-    char name;         // tyがND_IDENTの場合のみ使う
+    std::string name;  // tyがND_IDENTの場合のみ使う
 };
 
 extern std::vector<Token> tokens;
