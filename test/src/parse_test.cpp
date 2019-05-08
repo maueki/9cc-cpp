@@ -10,55 +10,50 @@ Node* equality();
 Node* add();
 
 bool operator==(const Node& lhs, const Node& rhs) {
-    return lhs.ty == rhs.ty && lhs.val == rhs.val && lhs.name == rhs.name &&
-        ((lhs.lhs == nullptr && rhs.lhs == nullptr) ||
-         (lhs.lhs != nullptr && rhs.lhs != nullptr && (*lhs.lhs == *rhs.lhs))) &&
-        ((lhs.rhs == nullptr && rhs.rhs == nullptr) ||
-         (lhs.rhs != nullptr && rhs.rhs != nullptr && (*lhs.rhs == *rhs.rhs)));
-}
+    try {
+        auto l = dynamic_cast<const NodeGeneral&>(lhs);
+        auto r = dynamic_cast<const NodeGeneral&>(rhs);
 
-std::ostream& operator<<(std::ostream& os, const Node& node) {
-    os << "{ " << "ty: " << node.ty;
-    if (node.lhs) {
-        os << ", lhs: " << *node.lhs;
-    } else {
-        os << ", lhs: nullptr";
+        return l.ty == r.ty &&
+               ((l.lhs == nullptr && r.lhs == nullptr) ||
+                (l.lhs != nullptr && r.lhs != nullptr && (*l.lhs == *r.lhs))) &&
+               ((l.rhs == nullptr && r.rhs == nullptr) ||
+                (l.rhs != nullptr && r.rhs != nullptr && (*l.rhs == *r.rhs)));
+    } catch (...) {
     }
 
-    if (node.rhs) {
-        os << ", rhs: " << *node.rhs;
-    } else {
-        os << ", rhs: nullptr";
+    try {
+        auto l = dynamic_cast<const NodeIdent&>(lhs);
+        auto r = dynamic_cast<const NodeIdent&>(rhs);
+
+        return l.name == r.name;
+    } catch (...) {
     }
 
-    os << ", val: " << node.val << ", name: " << node.name;
+    try {
+        auto l = dynamic_cast<const NodeNum&>(lhs);
+        auto r = dynamic_cast<const NodeNum&>(rhs);
 
-    return os;
+        return l.val == r.val;
+    } catch (...) {
+    }
+
+    return false;
 }
 
-Node* node_ident(const std::string& s) {
-    return new Node{ND_IDENT, nullptr, nullptr, 0, s};
-}
+Node* new_node(int ty, Node* lhs, Node* rhs);
+Node* new_node_num(int val);
+Node* new_node_ident(const std::string& s);
+Node* new_node_return(Node* lhs);
 
-Node* node_num(int i) {
-    return new Node{ND_NUM, nullptr, nullptr, i, std::string()};
-}
+class ParseTest : public testing::Test {};
 
-Node* node(int ty, Node* lhs, Node* rhs) {
-    return new Node{ty, lhs, rhs, 0, std::string()};
-}
-
-class ParseTest : public testing::Test {
-
-};
-
-TEST_F(ParseTest, add_test)
-{
+TEST_F(ParseTest, add_test) {
     {
         tokenize("3");
         parser_init();
         Node* actual = add();
-        Node* expect = new Node{ND_NUM, nullptr, nullptr, 3};
+        Node* expect = new_node_num(3);
         EXPECT_EQ(*actual, *expect);
     }
 
@@ -67,21 +62,17 @@ TEST_F(ParseTest, add_test)
         parser_init();
         Node* actual = add();
 
-        Node* expect = new Node{'+',
-                                new Node{ND_NUM, nullptr, nullptr, 3},
-                                new Node{ND_NUM, nullptr, nullptr, 5}, 0};
+        Node* expect = new_node('+', new_node_num(3), new_node_num(5));
         EXPECT_EQ(*actual, *expect);
     }
 }
 
-TEST_F(ParseTest, equality_test)
-{
+TEST_F(ParseTest, equality_test) {
     {
         tokenize("1==2");
         parser_init();
         Node* actual = equality();
-        Node *expect = new Node{ND_EQ, new Node{ND_NUM, nullptr, nullptr, 1},
-                                new Node{ND_NUM, nullptr, nullptr, 2}, 0};
+        Node* expect = new_node(ND_EQ, new_node_num(1), new_node_num(2));
         EXPECT_EQ(*actual, *expect);
     }
 
@@ -89,12 +80,9 @@ TEST_F(ParseTest, equality_test)
         tokenize("1<2==2");
         parser_init();
         Node* actual = equality();
-        Node* expect = new Node{ND_EQ,
-                                new Node{'<',
-                                         new Node{ND_NUM, nullptr, nullptr, 1},
-                                         new Node{ND_NUM, nullptr, nullptr, 2},
-                                         0},
-                                new Node{ND_NUM, nullptr, nullptr, 2}, 0};
+        Node* expect =
+            new_node(ND_EQ, new_node('<', new_node_num(1), new_node_num(2)),
+                     new_node_num(2));
         EXPECT_EQ(*actual, *expect);
     }
 
@@ -102,34 +90,30 @@ TEST_F(ParseTest, equality_test)
         tokenize("(1==2)==1");
         parser_init();
         Node* actual = equality();
-        Node* expect = new Node{ND_EQ,
-                                new Node{ND_EQ,
-                                         new Node{ND_NUM, nullptr, nullptr, 1},
-                                         new Node{ND_NUM, nullptr, nullptr, 2}, 0},
-                                new Node{ND_NUM, nullptr, nullptr, 1}, 0};
+        Node* expect =
+            new_node(ND_EQ, new_node(ND_EQ, new_node_num(1), new_node_num(2)),
+                     new_node_num(1));
         EXPECT_EQ(*actual, *expect);
     }
-
 }
 
-TEST_F(ParseTest, assign_test)
-{
+TEST_F(ParseTest, assign_test) {
     {
         tokenize("a=1");
         parser_init();
         Node* actual = assign();
-        Node* expect = node('=', node_ident("a"), node_num(1));
+        Node* expect = new_node('=', new_node_ident("a"), new_node_num(1));
         EXPECT_EQ(*actual, *expect);
     }
 }
 
-TEST_F(ParseTest, stmt_test)
-{
+TEST_F(ParseTest, stmt_test) {
     {
         tokenize("return a+b;");
         parser_init();
         Node* actual = stmt();
-        Node* expect = node(ND_RETURN, node('+', node_ident("a"), node_ident("b")), nullptr);
+        Node* expect = new_node_return(
+            new_node('+', new_node_ident("a"), new_node_ident("b")));
         EXPECT_EQ(*actual, *expect);
     }
 
@@ -137,7 +121,7 @@ TEST_F(ParseTest, stmt_test)
         tokenize("foo=1;");
         parser_init();
         Node* actual = stmt();
-        Node* expect = node('=', node_ident("foo"), node_num(1));
+        Node* expect = new_node('=', new_node_ident("foo"), new_node_num(1));
         EXPECT_EQ(*actual, *expect);
     }
 
@@ -145,8 +129,8 @@ TEST_F(ParseTest, stmt_test)
         tokenize("foo+bar;");
         parser_init();
         Node* actual = stmt();
-        Node* expect = node('+', node_ident("foo"), node_ident("bar"));
+        Node* expect =
+            new_node('+', new_node_ident("foo"), new_node_ident("bar"));
         EXPECT_EQ(*actual, *expect);
     }
-
 }

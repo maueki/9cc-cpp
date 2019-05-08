@@ -6,7 +6,7 @@
 
 struct GenContext {
     std::unordered_map<std::string, int> vars;
-    int current_offset=0;
+    int current_offset = 0;
 
     int var_put(const std::string& var) {
         auto iter = vars.find(var);
@@ -20,33 +20,38 @@ struct GenContext {
     }
 };
 
+void NodeGeneral::gen_lval(GenContext&) {
+    error("代入の左辺値が変数ではありません");
+}
 
-void gen_lval(Node *node, GenContext& context) {
-    if (node->ty != ND_IDENT) error("代入の左辺値が変数ではありません");
+void NodeNum::gen_lval(GenContext&) {
+    error("代入の左辺値が変数ではありません");
+}
 
-    int offset = context.var_put(node->name);
+void NodeIdent::gen_lval(GenContext& context) {
+    int offset = context.var_put(name);
     printf("  mov rax, rbp\n");
     printf("  sub rax, %d\n", offset);
     printf("  push rax\n");
 }
 
-void gen(Node *node, GenContext& context) {
-    if (node->ty == ND_NUM) {
-        printf("  push %d\n", node->val);
-        return;
-    }
+void NodeNum::gen(GenContext& context) {
+    printf("  push %d\n", val);
+    return;
+}
 
-    if (node->ty == ND_IDENT) {
-        gen_lval(node, context);
-        printf("  pop rax\n");
-        printf("  mov rax, [rax]\n");
-        printf("  push rax\n");
-        return;
-    }
+void NodeIdent::gen(GenContext& context) {
+    gen_lval(context);
+    printf("  pop rax\n");
+    printf("  mov rax, [rax]\n");
+    printf("  push rax\n");
+    return;
+}
 
-    if (node->ty == '=') {
-        gen_lval(node->lhs, context);
-        gen(node->rhs, context);
+void NodeGeneral::gen(GenContext& context) {
+    if (ty == '=') {
+        lhs->gen_lval(context);
+        rhs->gen(context);
 
         printf("  pop rdi\n");
         printf("  pop rax\n");
@@ -55,8 +60,8 @@ void gen(Node *node, GenContext& context) {
         return;
     }
 
-    if (node->ty == ND_RETURN) {
-        gen(node->lhs, context);
+    if (ty == ND_RETURN) {
+        lhs->gen(context);
         printf("  pop rax\n");
         printf("  mov rsp, rbp\n");
         printf("  pop rbp\n");
@@ -64,13 +69,13 @@ void gen(Node *node, GenContext& context) {
         return;
     }
 
-    gen(node->lhs, context);
-    gen(node->rhs, context);
+    lhs->gen(context);
+    rhs->gen(context);
 
     printf("  pop rdi\n");
     printf("  pop rax\n");
 
-    switch (node->ty) {
+    switch (ty) {
     case '+':
         printf("  add rax, rdi\n");
         break;
@@ -122,8 +127,8 @@ void gen(Node *node, GenContext& context) {
 void code_gen(std::vector<Node*>& code) {
     auto context = GenContext{};
 
-    for(auto& c: code) {
-        gen(c, context);
+    for (auto n : code) {
+        n->gen(context);
         printf("  pop rax\n");
     }
 }

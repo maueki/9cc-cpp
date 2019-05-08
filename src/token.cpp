@@ -54,8 +54,9 @@ loop:
 
         if (('a' <= *p && *p <= 'z') || ('A' <= *p && *p <= 'Z')) {
             auto sp = p;
-            while (is_alnum(*++p));
-            tokens.push_back(Token{TK_IDENT, 0, std::string(sp, p-sp), sp});
+            while (is_alnum(*++p))
+                ;
+            tokens.push_back(Token{TK_IDENT, 0, std::string(sp, p - sp), sp});
             continue;
         }
 

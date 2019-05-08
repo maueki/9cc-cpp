@@ -3,19 +3,19 @@
 static int pos;
 
 Node *new_node(int ty, Node *lhs, Node *rhs) {
-    return new Node{ty, lhs, rhs, 0, std::string()};
+    return new NodeGeneral{ty, lhs, rhs};
 }
 
 Node *new_node_num(int val) {
-    return new Node{ND_NUM, nullptr, nullptr, val, std::string()};
+    return new NodeNum{val};
 }
 
 Node *new_node_ident(const std::string &s) {
-    return new Node{ND_IDENT, nullptr, nullptr, 0, s};
+    return new NodeIdent{s};
 }
 
-Node *new_node_return(Node* lhs) {
-    return new Node{ND_RETURN, lhs, nullptr, 0, std::string()};
+Node *new_node_return(Node *lhs) {
+    return new NodeGeneral{ND_RETURN, lhs, nullptr};
 }
 
 int consume(int ty) {
@@ -69,11 +69,10 @@ Node *unary();
 /// term: num
 /// term: "(" assign ")"Node *assign() {
 
-std::vector<Node*> program() {
-    std::vector<Node*> code;
+std::vector<Node *> program() {
+    std::vector<Node *> code;
 
-    while (tokens[pos].ty != TK_EOF)
-        code.push_back(stmt());
+    while (tokens[pos].ty != TK_EOF) code.push_back(stmt());
 
     return code;
 }
@@ -84,18 +83,16 @@ Node *stmt() {
     if (consume(TK_RETURN)) {
         node = new_node_return(assign());
     } else {
-        node =assign();
+        node = assign();
     }
 
-    if (!consume(';'))
-        error("';'ではないトークンです: %s", tokens[pos].input);
+    if (!consume(';')) error("';'ではないトークンです: %s", tokens[pos].input);
     return node;
 }
 
-Node* assign() {
+Node *assign() {
     Node *node = equality();
-    if (consume('='))
-        node = new_node('=', node, assign());
+    if (consume('=')) node = new_node('=', node, assign());
     return node;
 }
 
@@ -156,10 +153,8 @@ Node *mul() {
 }
 
 Node *unary() {
-    if (consume('+'))
-        return term();
-    if (consume('-'))
-        return new_node('-', new_node_num(0), term());
+    if (consume('+')) return term();
+    if (consume('-')) return new_node('-', new_node_num(0), term());
     return term();
 }
 
@@ -182,7 +177,7 @@ Node *term() {
     return nullptr;  // unreachable
 }
 
-std::vector<Node*> parse() {
+std::vector<Node *> parse() {
     pos = 0;
     return program();
 }
