@@ -44,5 +44,8 @@ try 2 'a=2;a;'
 try 6 'a=2;b=3;a*b;'
 try 3 'a=1;b=2;return a+b;a;'
 try 3 'foo = 1; bar = foo + 1;return foo + bar ;'
+try 2 'a=1; if (a==1) return 2; else return 3;'
+try 3 'a=1; if (a==2) return 2; else return 3;'
+try 3 'a=1; if (a==2) return 2; return 3;'
 
 echo OK
