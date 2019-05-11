@@ -124,6 +124,12 @@ void NodeGeneral::gen(GenContext& context) {
     printf("  push rax\n");
 }
 
+void NodeIf::gen(GenContext& context) {
+}
+
+void NodeIf::gen_lval(GenContext& context) {
+}
+
 void code_gen(std::vector<Node*>& code) {
     auto context = GenContext{};
 

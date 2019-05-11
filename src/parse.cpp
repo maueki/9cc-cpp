@@ -1,5 +1,7 @@
 #include "9cc.hpp"
 
+#include <cassert>
+
 static int pos;
 
 Node *new_node(int ty, Node *lhs, Node *rhs) {
@@ -16,6 +18,13 @@ Node *new_node_ident(const std::string &s) {
 
 Node *new_node_return(Node *lhs) {
     return new NodeGeneral{ND_RETURN, lhs, nullptr};
+}
+
+Node *new_node_if(Node* cond, Node* then, Node* els) {
+    assert(cond);
+    assert(then);
+
+    return new NodeIf{cond, then, els};
 }
 
 int consume(int ty) {
@@ -40,6 +49,9 @@ Node *unary();
 ///
 /// stmt: "return" assign ";"
 /// stmt: assign ";"
+/// stmt: ifclause
+///
+/// ifclause: "if" "(" assign ")" stmt ["else" stmt]
 ///
 /// assign: equality
 /// assign: equality "=" assign
@@ -82,6 +94,17 @@ Node *stmt() {
 
     if (consume(TK_RETURN)) {
         node = new_node_return(assign());
+    } else if (consume(TK_IF)) {
+        if (!consume('(')) error("'('ではないトークンです: %s", tokens[pos].input);
+        auto cond = assign();
+        if (!consume(')')) error("')'ではないトークンです: %s", tokens[pos].input);
+        auto then = stmt();
+        if (consume(TK_ELSE)) {
+            auto els = stmt();
+            return new_node_if(cond, then, els);
+        } else {
+            return new_node_if(cond, then, nullptr);
+        }
     } else {
         node = assign();
     }

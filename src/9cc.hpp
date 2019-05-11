@@ -11,6 +11,8 @@ enum {
     TK_GE,         //! >=
     TK_RETURN,     //! return
     TK_EOF,        //! 入力の終わりを表すトークン
+    TK_IF,         //! if
+    TK_ELSE,       //! else
 };
 
 // トークンの型
@@ -60,6 +62,17 @@ struct NodeIdent : public Node {
     std::string name;
 
     explicit NodeIdent(const std::string &name) : name(name) {}
+
+    void gen(struct GenContext &) override;
+    void gen_lval(struct GenContext &) override;
+};
+
+struct NodeIf : public Node {
+    struct Node* cond;
+    struct Node* then;
+    struct Node* els;
+
+    NodeIf(Node* cond, Node* then, Node* els): cond(cond), then(then), els(els) {}
 
     void gen(struct GenContext &) override;
     void gen_lval(struct GenContext &) override;

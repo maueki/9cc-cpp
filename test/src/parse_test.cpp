@@ -38,6 +38,16 @@ bool operator==(const Node& lhs, const Node& rhs) {
     } catch (...) {
     }
 
+    try {
+        auto l = dynamic_cast<const NodeIf&>(lhs);
+        auto r = dynamic_cast<const NodeIf&>(rhs);
+
+        return *l.cond == *r.cond && *l.then == *r.then &&
+            (l.els == r.els ||
+             (l.els && r.els && *l.els == *r.els));
+    } catch (...) {
+    }
+
     return false;
 }
 
@@ -45,6 +55,7 @@ Node* new_node(int ty, Node* lhs, Node* rhs);
 Node* new_node_num(int val);
 Node* new_node_ident(const std::string& s);
 Node* new_node_return(Node* lhs);
+Node* new_node_if(Node* cond, Node* then, Node* els);
 
 class ParseTest : public testing::Test {};
 
@@ -133,4 +144,27 @@ TEST_F(ParseTest, stmt_test) {
             new_node('+', new_node_ident("foo"), new_node_ident("bar"));
         EXPECT_EQ(*actual, *expect);
     }
+
+    {
+        tokenize("if (1==a) 1; else return 2;");
+        parser_init();
+        Node* actual = stmt();
+        Node* expect =
+            new_node_if(new_node(TK_EQ, new_node_num(1), new_node_ident("a")),
+                        new_node_num(1),
+                        new_node_return(new_node_num(2)));
+        EXPECT_EQ(*actual, *expect);
+    }
+
+    {
+        tokenize("if (a==1+1) return a;");
+        parser_init();
+        Node* actual = stmt();
+        Node* expect =
+            new_node_if(new_node(TK_EQ, new_node_ident("a"),
+                                 new_node('+', new_node_num(1), new_node_num(1))),
+                        new_node_return(new_node_ident("a")), nullptr);
+        EXPECT_EQ(*actual, *expect);
+    }
+
 }

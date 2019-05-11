@@ -11,6 +11,9 @@
 static std::tuple<const char *, int> symbols[] = {
     {"==", TK_EQ}, {"!=", TK_NE}, {"<=", TK_LE}, {">=", TK_GE}};
 
+static std::tuple<const char*, int> words[] = {
+    {"return", TK_RETURN}, {"else", TK_ELSE}, {"if", TK_IF}};
+
 // トークナイズした結果のトークン列はこのベクタに保存する
 std::vector<Token> tokens;
 
@@ -30,10 +33,13 @@ loop:
             continue;
         }
 
-        if (strncmp(p, "return", 6) == 0 && !is_alnum(p[6])) {
-            tokens.push_back(Token{TK_RETURN, 0, p});
-            p += 6;
-            continue;
+        for (auto &&word: words) {
+            auto s = std::get<0>(word);
+            if (strncmp(p, s, strlen(s)) == 0 && !is_alnum(p[strlen(s)])) {
+                tokens.push_back(Token{std::get<1>(word), 0, p});
+                p += strlen(s);
+                goto loop;
+            }
         }
 
         for (auto &&sym : symbols) {
