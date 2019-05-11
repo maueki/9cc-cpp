@@ -27,6 +27,10 @@ Node *new_node_if(Node* cond, Node* then, Node* els) {
     return new NodeIf{cond, then, els};
 }
 
+Node *new_node_for(Node* init, Node* cond, Node* proc, Node* block) {
+    return new NodeFor{init, cond, proc, block};
+}
+
 int consume(int ty) {
     if (tokens[pos].ty != ty) return 0;
     pos++;
@@ -50,8 +54,11 @@ Node *unary();
 /// stmt: "return" assign ";"
 /// stmt: assign ";"
 /// stmt: ifclause
+/// stmt: forclause
 ///
 /// ifclause: "if" "(" assign ")" stmt ["else" stmt]
+///
+/// forclause: "for" "(" assign ";" assign ";" assign ")" stmt
 ///
 /// assign: equality
 /// assign: equality "=" assign
@@ -105,6 +112,38 @@ Node *stmt() {
         } else {
             return new_node_if(cond, then, nullptr);
         }
+    } else if (consume(TK_FOR)) {
+        Node *init, *cond, *proc, *block;
+        if (!consume('(')) error("'('ではないトークンです: %s", tokens[pos].input);
+
+        if (consume(';')) {
+            init = nullptr;
+        } else {
+            init = assign();
+            if (!consume(';')) error("';'ではないトークンです: %s", tokens[pos].input);
+        }
+
+        if (consume(';')) {
+            cond = nullptr;
+        } else {
+            cond = assign();
+            if (!consume(';')) error("';'ではないトークンです: %s", tokens[pos].input);
+        }
+
+        if (consume(')')) {
+            proc = nullptr;
+        } else {
+            proc = assign();
+            if (!consume(')')) error("')'ではないトークンです: %s", tokens[pos].input);
+        }
+
+        if (consume(';')) {
+            block = nullptr;
+        } else {
+            block = stmt();
+        }
+
+        return new_node_for(init, cond, proc, block);
     } else {
         node = assign();
     }

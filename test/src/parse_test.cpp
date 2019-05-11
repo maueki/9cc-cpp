@@ -48,6 +48,17 @@ bool operator==(const Node& lhs, const Node& rhs) {
     } catch (...) {
     }
 
+    try {
+        auto l = dynamic_cast<const NodeFor&>(lhs);
+        auto r = dynamic_cast<const NodeFor&>(rhs);
+
+        return (l.init == r.init || (l.init && r.init && *l.init == *r.init)) &&
+            (l.cond == r.cond || (l.cond && r.cond && *l.cond == *r.cond)) &&
+            (l.proc == r.proc || (l.proc && r.proc && *l.proc == *r.proc)) &&
+            (l.block == r.block || (l.block && r.block && *l.block == *r.block));
+    } catch(...) {
+    }
+
     return false;
 }
 
@@ -56,6 +67,7 @@ Node* new_node_num(int val);
 Node* new_node_ident(const std::string& s);
 Node* new_node_return(Node* lhs);
 Node* new_node_if(Node* cond, Node* then, Node* els);
+Node *new_node_for(Node* init, Node* cond, Node* proc, Node* block);
 
 class ParseTest : public testing::Test {};
 
@@ -164,6 +176,27 @@ TEST_F(ParseTest, stmt_test) {
             new_node_if(new_node(TK_EQ, new_node_ident("a"),
                                  new_node('+', new_node_num(1), new_node_num(1))),
                         new_node_return(new_node_ident("a")), nullptr);
+        EXPECT_EQ(*actual, *expect);
+    }
+
+    {
+        tokenize("for(a=1; a<3; a=a+1) b=1;");
+        parser_init();
+        Node* actual = stmt();
+        Node* expect =
+            new_node_for(new_node('=', new_node_ident("a"), new_node_num(1)),
+                         new_node('<', new_node_ident("a"), new_node_num(3)),
+                         new_node('=', new_node_ident("a"), new_node('+', new_node_ident("a"), new_node_num(1))),
+                         new_node('=', new_node_ident("b"), new_node_num(1)));
+        EXPECT_EQ(*actual, *expect);
+    }
+
+    {
+        tokenize("for(;;);");
+        parser_init();
+        Node* actual = stmt();
+        Node* expect =
+            new_node_for(nullptr, nullptr, nullptr, nullptr);
         EXPECT_EQ(*actual, *expect);
     }
 

@@ -11,8 +11,8 @@
 static std::tuple<const char *, int> symbols[] = {
     {"==", TK_EQ}, {"!=", TK_NE}, {"<=", TK_LE}, {">=", TK_GE}};
 
-static std::tuple<const char*, int> words[] = {
-    {"return", TK_RETURN}, {"else", TK_ELSE}, {"if", TK_IF}};
+static std::tuple<const char *, int> words[] = {
+    {"return", TK_RETURN}, {"else", TK_ELSE}, {"if", TK_IF}, {"for", TK_FOR}};
 
 // トークナイズした結果のトークン列はこのベクタに保存する
 std::vector<Token> tokens;

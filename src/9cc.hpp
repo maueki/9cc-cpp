@@ -13,6 +13,7 @@ enum {
     TK_EOF,        //! 入力の終わりを表すトークン
     TK_IF,         //! if
     TK_ELSE,       //! else
+    TK_FOR,        //! for
 };
 
 // トークンの型
@@ -76,6 +77,19 @@ struct NodeIf : public Node {
 
     void gen(struct GenContext &) override;
     void gen_lval(struct GenContext &) override;
+};
+
+struct NodeFor : public Node {
+    struct Node* init;
+    struct Node* cond;
+    struct Node* proc;
+    struct Node* block;
+
+    NodeFor(Node* init, Node* cond, Node* proc, Node* block)
+        : init(init), cond(cond), proc(proc), block(block) {}
+
+    void gen(struct GenContext &) override{};
+    void gen_lval(struct GenContext &) override{};
 };
 
 extern std::vector<Token> tokens;
