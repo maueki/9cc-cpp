@@ -14,6 +14,7 @@ enum {
     TK_IF,         //! if
     TK_ELSE,       //! else
     TK_FOR,        //! for
+    TK_WHILE,      //! while
 };
 
 // トークンの型
@@ -90,6 +91,16 @@ struct NodeFor : public Node {
 
     void gen(struct GenContext &) override;
     void gen_lval(struct GenContext &) override;
+};
+
+struct NodeWhile: public Node {
+    struct Node* cond;
+    struct Node* block;
+
+    NodeWhile(Node* cond, Node* block): cond(cond), block(block){}
+
+    void gen(struct GenContext &) override{}
+    void gen_lval(struct GenContext &) override{}
 };
 
 extern std::vector<Token> tokens;

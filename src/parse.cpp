@@ -31,6 +31,10 @@ Node *new_node_for(Node* init, Node* cond, Node* proc, Node* block) {
     return new NodeFor{init, cond, proc, block};
 }
 
+Node *new_node_while(Node* cond, Node* block) {
+    return new NodeWhile(cond, block);
+}
+
 int consume(int ty) {
     if (tokens[pos].ty != ty) return 0;
     pos++;
@@ -55,10 +59,13 @@ Node *unary();
 /// stmt: assign ";"
 /// stmt: ifclause
 /// stmt: forclause
+/// stmt: whileclause
 ///
 /// ifclause: "if" "(" assign ")" stmt ["else" stmt]
 ///
 /// forclause: "for" "(" assign ";" assign ";" assign ")" stmt
+///
+/// whileclause: "while" "(" assign ")" stmt
 ///
 /// assign: equality
 /// assign: equality "=" assign
@@ -144,6 +151,23 @@ Node *stmt() {
         }
 
         return new_node_for(init, cond, proc, block);
+    } else if (consume(TK_WHILE)) {
+        Node *cond, *block;
+        if (!consume('(')) error("'('ではないトークンです: %s", tokens[pos].input);
+        if (consume(')')) {
+            cond = nullptr;
+        } else {
+            cond = assign();
+            if (!consume(')')) error("')'ではないトークンです: %s", tokens[pos].input);
+        }
+
+        if (consume(';')) {
+            block = nullptr;
+        } else {
+            block = stmt();
+        }
+
+        return new_node_while(cond, block);
     } else {
         node = assign();
     }

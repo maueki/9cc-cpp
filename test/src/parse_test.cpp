@@ -59,6 +59,15 @@ bool operator==(const Node& lhs, const Node& rhs) {
     } catch(...) {
     }
 
+    try {
+        auto l = dynamic_cast<const NodeWhile&>(lhs);
+        auto r = dynamic_cast<const NodeWhile&>(rhs);
+
+        return (l.cond == r.cond ||(l.cond && r.cond && *l.cond == *r.cond)) &&
+            (l.block == r.block ||(l.block && r.block && *l.block == *r.block));
+    } catch(...) {
+    }
+
     return false;
 }
 
@@ -68,6 +77,7 @@ Node* new_node_ident(const std::string& s);
 Node* new_node_return(Node* lhs);
 Node* new_node_if(Node* cond, Node* then, Node* els);
 Node *new_node_for(Node* init, Node* cond, Node* proc, Node* block);
+Node *new_node_while(Node* cond, Node* block);
 
 class ParseTest : public testing::Test {};
 
@@ -200,4 +210,14 @@ TEST_F(ParseTest, stmt_test) {
         EXPECT_EQ(*actual, *expect);
     }
 
+    {
+        tokenize("while(a==1) b=b+1;");
+        parser_init();
+        Node* actual = stmt();
+        Node* expect =
+            new_node_while(new_node(TK_EQ, new_node_ident("a"), new_node_num(1)),
+                           new_node('=', new_node_ident("b"),
+                                    new_node('+', new_node_ident("b"), new_node_num(1))));
+        EXPECT_EQ(*actual, *expect);
+    }
 }
