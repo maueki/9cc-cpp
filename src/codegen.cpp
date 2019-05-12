@@ -7,6 +7,7 @@
 struct GenContext {
     std::unordered_map<std::string, int> vars;
     int current_offset = 0;
+    int label_index = 0;
 
     int var_put(const std::string& var) {
         auto iter = vars.find(var);
@@ -17,6 +18,12 @@ struct GenContext {
         current_offset += 8;
         vars.insert({var, current_offset});
         return current_offset;
+    }
+
+    std::string new_label() {
+        char buf[100];
+        sprintf(buf, ".Label%d", label_index++);
+        return std::string(buf);
     }
 };
 
@@ -125,9 +132,25 @@ void NodeGeneral::gen(GenContext& context) {
 }
 
 void NodeIf::gen(GenContext& context) {
+    cond->gen(context);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    auto else_label = context.new_label();
+    printf("  je %s\n", else_label.c_str());
+    then->gen(context);
+    if (els) {
+        auto end_label = context.new_label();
+        printf("  jmp %s\n", end_label.c_str());
+        printf("%s:\n", else_label.c_str());
+        els->gen(context);
+        printf("%s:\n", end_label.c_str());
+    } else {
+        printf("%s:\n", else_label.c_str());
+    }
 }
 
 void NodeIf::gen_lval(GenContext& context) {
+    error("代入の左辺値が変数ではありません");
 }
 
 void code_gen(std::vector<Node*>& code) {
