@@ -47,5 +47,7 @@ try 3 'foo = 1; bar = foo + 1;return foo + bar ;'
 try 2 'a=1; if (a==1) return 2; else return 3;'
 try 3 'a=1; if (a==2) return 2; else return 3;'
 try 3 'a=1; if (a==2) return 2; return 3;'
+try 20 'a=0;for(i=0;i<10;i=i+1) a = a+2; return a;'
+try 10 'a=0;for(;a<10;a=a+1); return a;'
 
 echo OK
