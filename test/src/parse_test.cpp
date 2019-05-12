@@ -68,6 +68,20 @@ bool operator==(const Node& lhs, const Node& rhs) {
     } catch(...) {
     }
 
+    try {
+        auto l = dynamic_cast<const NodeBlock&>(lhs);
+        auto r = dynamic_cast<const NodeBlock&>(rhs);
+
+        if (l.block.size() != r.block.size()) return false;
+
+        for(size_t i=0; i<l.block.size(); i++) {
+            if (!(*l.block[i] == *r.block[i])) return false;
+        }
+
+        return true;
+    } catch(...) {
+    }
+
     return false;
 }
 
@@ -78,6 +92,7 @@ Node* new_node_return(Node* lhs);
 Node* new_node_if(Node* cond, Node* then, Node* els);
 Node *new_node_for(Node* init, Node* cond, Node* proc, Node* block);
 Node *new_node_while(Node* cond, Node* block);
+Node *new_node_block(std::vector<Node*>&& stmts);
 
 class ParseTest : public testing::Test {};
 
@@ -218,6 +233,16 @@ TEST_F(ParseTest, stmt_test) {
             new_node_while(new_node(TK_EQ, new_node_ident("a"), new_node_num(1)),
                            new_node('=', new_node_ident("b"),
                                     new_node('+', new_node_ident("b"), new_node_num(1))));
+        EXPECT_EQ(*actual, *expect);
+    }
+
+    {
+        tokenize("{a=1; b=1;}");
+        parser_init();
+        Node* actual = stmt();
+        Node* expect = new_node_block(std::vector{
+                new_node('=', new_node_ident("a"), new_node_num(1)),
+                    new_node('=', new_node_ident("b"), new_node_num(1))});
         EXPECT_EQ(*actual, *expect);
     }
 }

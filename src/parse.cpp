@@ -35,6 +35,10 @@ Node *new_node_while(Node* cond, Node* block) {
     return new NodeWhile(cond, block);
 }
 
+Node *new_node_block(std::vector<Node*>&& block) {
+    return new NodeBlock(std::move(block));
+}
+
 int consume(int ty) {
     if (tokens[pos].ty != ty) return 0;
     pos++;
@@ -55,11 +59,14 @@ Node *unary();
 /// program: stmt program;
 /// program: ε
 ///
+/// stmt: "{" stmt_list "}"
 /// stmt: "return" assign ";"
 /// stmt: assign ";"
 /// stmt: ifclause
 /// stmt: forclause
 /// stmt: whileclause
+///
+/// stmt_list: stmt stmt_list
 ///
 /// ifclause: "if" "(" assign ")" stmt ["else" stmt]
 ///
@@ -168,6 +175,13 @@ Node *stmt() {
         }
 
         return new_node_while(cond, block);
+    } else if (consume('{')) {
+        std::vector<Node*> stmts{};
+        for (;;) {
+            stmts.push_back(stmt());
+            if (consume('}')) { break; }
+        }
+        return new_node_block(std::move(stmts));
     } else {
         node = assign();
     }
