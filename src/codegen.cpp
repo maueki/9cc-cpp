@@ -193,6 +193,19 @@ void NodeWhile::gen_lval(GenContext& context) {
     error("代入の左辺値が変数ではありません");
 }
 
+void NodeBlock::gen(GenContext& context) {
+    for(auto& n: block) {
+        n->gen(context);
+        printf("  pop rax\n");
+    }
+
+    printf("  push rax\n");
+}
+
+void NodeBlock::gen_lval(GenContext& context) {
+    error("代入の左辺値が変数ではありません");
+}
+
 void code_gen(std::vector<Node*>& code) {
     auto context = GenContext{};
 

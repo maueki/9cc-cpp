@@ -50,5 +50,6 @@ try 3 'a=1; if (a==2) return 2; return 3;'
 try 20 'a=0;for(i=0;i<10;i=i+1) a = a+2; return a;'
 try 10 'a=0;for(;a<10;a=a+1); return a;'
 try 10 'a=0;while(a<10)a=a+1;return a;'
+try 1 'a=0; if (a<2) { a = a+1; return a;} return a;'
 
 echo OK

@@ -108,8 +108,8 @@ struct NodeBlock: public Node {
 
     NodeBlock(std::vector<Node*>&& block): block(block) {}
 
-    void gen(struct GenContext &) override{};
-    void gen_lval(struct GenContext &) override{};
+    void gen(struct GenContext &) override;
+    void gen_lval(struct GenContext &) override;
 };
 
 extern std::vector<Token> tokens;
