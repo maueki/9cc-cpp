@@ -99,8 +99,8 @@ struct NodeWhile: public Node {
 
     NodeWhile(Node* cond, Node* block): cond(cond), block(block){}
 
-    void gen(struct GenContext &) override{}
-    void gen_lval(struct GenContext &) override{}
+    void gen(struct GenContext &) override;
+    void gen_lval(struct GenContext &) override;
 };
 
 extern std::vector<Token> tokens;

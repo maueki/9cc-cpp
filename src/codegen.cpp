@@ -175,6 +175,24 @@ void NodeFor::gen_lval(GenContext& context) {
     error("代入の左辺値が変数ではありません");
 }
 
+void NodeWhile::gen(GenContext& context) {
+    auto begin_label = context.new_label();
+    auto end_label = context.new_label();
+    printf("%s:\n", begin_label.c_str());
+    cond->gen(context);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je %s\n", end_label.c_str());
+    block->gen(context);
+    printf("  pop rax\n");
+    printf("  jmp %s\n", begin_label.c_str());
+    printf("%s:\n", end_label.c_str());
+}
+
+void NodeWhile::gen_lval(GenContext& context) {
+    error("代入の左辺値が変数ではありません");
+}
+
 void code_gen(std::vector<Node*>& code) {
     auto context = GenContext{};
 
