@@ -34,7 +34,7 @@ TEST_F(ParseTest, add_test)
         parser_init();
         Node* actual = add();
 
-        Node* expect = new Node{'+',
+        Node* expect = new Node{ND_ADD,
                                 new Node{ND_NUM, nullptr, nullptr, 3},
                                 new Node{ND_NUM, nullptr, nullptr, 5}, 0};
         EXPECT_EQ(*actual, *expect);
@@ -57,7 +57,7 @@ TEST_F(ParseTest, equality_test)
         parser_init();
         Node* actual = equality();
         Node* expect = new Node{ND_EQ,
-                                new Node{'<',
+                                new Node{ND_LT,
                                          new Node{ND_NUM, nullptr, nullptr, 1},
                                          new Node{ND_NUM, nullptr, nullptr, 2},
                                          0},

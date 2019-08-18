@@ -15,16 +15,16 @@ void gen(Node *node) {
     printf("  pop rax\n");
 
     switch (node->ty) {
-    case '+':
+    case ND_ADD:
         printf("  add rax, rdi\n");
         break;
-    case '-':
+    case ND_SUB:
         printf("  sub rax, rdi\n");
         break;
-    case '*':
+    case ND_MUL:
         printf("  mul rdi\n");
         break;
-    case '/':
+    case ND_DIV:
         printf("  mov rdx, 0\n");
         printf("  div rdi\n");
         break;
@@ -38,7 +38,7 @@ void gen(Node *node) {
         printf("  setne al\n");
         printf("  movzb rax, al\n");
         break;
-    case '<':
+    case ND_LT:
         printf("  cmp rax, rdi\n");
         printf("  setl al\n");
         printf("  movzb rax, al\n");
@@ -48,7 +48,7 @@ void gen(Node *node) {
         printf("  setle al\n");
         printf("  movzb rax, al\n");
         break;
-    case '>':
+    case ND_GT:
         printf("  cmp rdi, rax\n");
         printf("  setl al\n");
         printf("  movzb rax, al\n");

@@ -70,11 +70,11 @@ Node *relational() {
 
     for (;;) {
         if (consume("<"))
-            node = new_node('<', node, add());
+            node = new_node(ND_LT, node, add());
         else if (consume("<="))
             node = new_node(ND_LE, node, add());
         else if (consume(">"))
-            node = new_node('>', node, add());
+            node = new_node(ND_GT, node, add());
         else if (consume(">="))
             node = new_node(ND_GE, node, add());
         else
@@ -87,9 +87,9 @@ Node *add() {
 
     for (;;) {
         if (consume("+"))
-            node = new_node('+', node, mul());
+            node = new_node(ND_ADD, node, mul());
         else if (consume("-"))
-            node = new_node('-', node, mul());
+            node = new_node(ND_SUB, node, mul());
         else
             return node;
     }
@@ -100,9 +100,9 @@ Node *mul() {
 
     for (;;) {
         if (consume("*"))
-            node = new_node('*', node, unary());
+            node = new_node(ND_MUL, node, unary());
         else if (consume("/"))
-            node = new_node('/', node, unary());
+            node = new_node(ND_DIV, node, unary());
         else
             return node;
     }

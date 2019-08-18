@@ -17,11 +17,17 @@ struct Token {
 };
 
 enum {
-    ND_NUM = 256,  //! 整数のノードの型
+    ND_ADD,        //! +
+    ND_SUB,        //! -
+    ND_MUL,        //! *
+    ND_DIV,        //! /
     ND_EQ,         //! ==
     ND_NE,         //! !=
+    ND_LT,         //! <
     ND_LE,         //! <=
+    ND_GT,         //! >
     ND_GE,         //! >=
+    ND_NUM,        //! 整数のノードの型
 };
 
 struct Node {
