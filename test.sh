@@ -1,4 +1,4 @@
-##!/bin/bash
+#!/bin/bash
 try() {
   expected="$1"
   input="$2"
