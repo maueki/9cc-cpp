@@ -1,5 +1,7 @@
 #include "9cc.hpp"
 
+#include <cassert>
+
 static int pos;
 
 Node *new_node(int ty, Node *lhs, Node *rhs) {
@@ -10,10 +12,11 @@ Node *new_node_num(int val) {
     return new Node{ND_NUM, nullptr, nullptr, val};
 }
 
-int consume(int ty) {
-    if (tokens[pos].ty != ty) return 0;
+bool consume(const char* op) {
+    assert(op);
+    if (tokens[pos].ty != TK_RESERVED || tokens[pos].reserved != op) return false;
     pos++;
-    return 1;
+    return true;
 }
 
 Node *relational();
@@ -53,9 +56,9 @@ Node *equality() {
     Node *node = relational();
 
     for (;;) {
-        if (consume(TK_EQ))
+        if (consume("=="))
             node = new_node(ND_EQ, node, relational());
-        else if (consume(TK_NE))
+        else if (consume("!="))
             node = new_node(ND_NE, node, relational());
         else
             return node;
@@ -66,13 +69,13 @@ Node *relational() {
     Node *node = add();
 
     for (;;) {
-        if (consume('<'))
+        if (consume("<"))
             node = new_node('<', node, add());
-        else if (consume(TK_LE))
+        else if (consume("<="))
             node = new_node(ND_LE, node, add());
-        else if (consume('>'))
+        else if (consume(">"))
             node = new_node('>', node, add());
-        else if (consume(TK_GE))
+        else if (consume(">="))
             node = new_node(ND_GE, node, add());
         else
             return node;
@@ -83,9 +86,9 @@ Node *add() {
     Node *node = mul();
 
     for (;;) {
-        if (consume('+'))
+        if (consume("+"))
             node = new_node('+', node, mul());
-        else if (consume('-'))
+        else if (consume("-"))
             node = new_node('-', node, mul());
         else
             return node;
@@ -96,9 +99,9 @@ Node *mul() {
     Node *node = unary();
 
     for (;;) {
-        if (consume('*'))
+        if (consume("*"))
             node = new_node('*', node, unary());
-        else if (consume('/'))
+        else if (consume("/"))
             node = new_node('/', node, unary());
         else
             return node;
@@ -106,18 +109,18 @@ Node *mul() {
 }
 
 Node *unary() {
-    if (consume('+'))
+    if (consume("+"))
         return term();
-    if (consume('-'))
+    if (consume("-"))
         return new_node('-', new_node_num(0), term());
     return term();
 }
 
 Node *term() {
     // 次のトークンが'('なら、"(" add ")"のはず
-    if (consume('(')) {
+    if (consume("(")) {
         Node *node = equality();
-        if (!consume(')'))
+        if (!consume(")"))
             error("開きカッコに対応する閉じカッコがありません: %s",
                   tokens[pos].input);
         return node;

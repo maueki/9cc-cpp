@@ -8,8 +8,7 @@
 
 #include "9cc.hpp"
 
-static std::tuple<const char *, int> symbols[] = {
-    {"==", TK_EQ}, {"!=", TK_NE}, {"<=", TK_LE}, {">=", TK_GE}};
+static const char* symbols[] = {"==", "!=", "<=",">="};
 
 // トークナイズした結果のトークン列はこのベクタに保存する
 std::vector<Token> tokens;
@@ -26,17 +25,16 @@ loop:
         }
 
         for (auto &&sym : symbols) {
-            auto op = std::get<0>(sym);
-            if (!strncmp(p, op, strlen(op))) {
-                tokens.push_back(Token{std::get<1>(sym), 0, p});
-                p += strlen(op);
+            if (!strncmp(p, sym, strlen(sym))) {
+                tokens.push_back(Token{TK_RESERVED, 0, sym, p});
+                p += strlen(sym);
                 goto loop;
             }
         }
 
         if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
             *p == ')' || *p == '<' || *p == '>') {
-            tokens.push_back(Token{*p, 0, p});
+            tokens.push_back(Token{TK_RESERVED, 0, std::string(p, 1), p});
             p++;
             continue;
         }
@@ -46,7 +44,7 @@ loop:
             char *tmp = nullptr;
             auto val = strtol(p, &tmp, 10);
             p = tmp;
-            tokens.push_back(Token{TK_NUM, static_cast<int>(val), last_p});
+            tokens.push_back(Token{TK_NUM, static_cast<int>(val), "", last_p});
             continue;
         }
 
