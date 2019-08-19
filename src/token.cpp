@@ -33,7 +33,7 @@ loop:
         }
 
         if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
-            *p == ')' || *p == '<' || *p == '>' || *p == ';') {
+            *p == ')' || *p == '<' || *p == '>' || *p == '=' || *p == ';') {
             tokens.push_back(Token{TK_RESERVED, 0, std::string(p, 1), p});
             p++;
             continue;
@@ -49,7 +49,7 @@ loop:
         }
 
         if ('a' <= *p && *p <= 'z') {
-            tokens.push_back(Token{TK_IDENT, 0, p++});
+            tokens.push_back(Token{TK_IDENT, 0, "", p++});
             continue;
         }
 

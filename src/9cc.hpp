@@ -44,7 +44,7 @@ struct Node {
 extern std::vector<Token> tokens;
 
 void tokenize(const char *p);
-Node *parse();
+std::vector<Node*> program();
 void gen(Node *node);
 
 void error(const char *fmt, ...);

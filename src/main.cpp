@@ -10,19 +10,29 @@ int main(int argc, char **argv) {
 
     // トークナイズしてパースする
     tokenize(argv[1]);
-    Node *node = parse();
+    std::vector<Node*> nodes = program();
 
     // アセンブリの前半部分を出力
-  printf(".intel_syntax noprefix\n");
-  printf(".global main\n");
-  printf("main:\n");
+    printf(".intel_syntax noprefix\n");
+    printf(".global main\n");
+    printf("main:\n");
 
-  // 抽象構文木を下りながらコード生成
-  gen(node);
+    // プロローグ
+    // 変数26古個分の領域を確保する
+    printf("  push rbp\n");
+    printf("  mov rbp, rsp\n");
+    printf("  sub rsp, 208\n");
 
-  // スタックトップに式全体の値が残っているはずなので
-  // それをRAXにロードして関数からの返り値とする
-  printf("  pop rax\n");
-  printf("  ret\n");
-  return 0;
+    for(auto&& node: nodes) {
+        gen(node);
+        printf("  pop rax\n");
+    }
+    // 抽象構文木を下りながらコード生成
+
+
+    // エピローグ
+    printf("  mov rsp, rbp\n");
+    printf("  pop rbp\n");
+    printf("  ret\n");
+    return 0;
 }

@@ -20,7 +20,7 @@ bool consume(const char* op) {
 }
 
 Token* consume_ident() {
-    if (tokens[pos].ty == TK_IDENT) return &tokens[pos];
+    if (tokens[pos].ty == TK_IDENT) return &tokens[pos++];
 
     return nullptr;
 }
@@ -192,7 +192,7 @@ Node *term() {
     // そうでなければ数値のはず
     if (tokens[pos].ty == TK_NUM) return new_node_num(tokens[pos++].val);
 
-    error("数値でも開きカッコでもないトークンです: %s", tokens[pos].input);
+    error("数値でも変数でも開きカッコでもないトークンです: %s", tokens[pos].input);
 
     return nullptr;  // unreachable
 }
