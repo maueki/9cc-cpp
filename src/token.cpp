@@ -33,7 +33,7 @@ loop:
         }
 
         if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
-            *p == ')' || *p == '<' || *p == '>') {
+            *p == ')' || *p == '<' || *p == '>' || *p == ';') {
             tokens.push_back(Token{TK_RESERVED, 0, std::string(p, 1), p});
             p++;
             continue;
@@ -45,6 +45,11 @@ loop:
             auto val = strtol(p, &tmp, 10);
             p = tmp;
             tokens.push_back(Token{TK_NUM, static_cast<int>(val), "", last_p});
+            continue;
+        }
+
+        if ('a' <= *p && *p <= 'z') {
+            tokens.push_back(Token{TK_IDENT, 0, p++});
             continue;
         }
 

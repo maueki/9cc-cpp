@@ -2,21 +2,22 @@
 #include <string>
 
 // トークンの型を表す値
-enum {
+enum TokenKind{
     TK_RESERVED,
     TK_NUM, //! 整数トークン
+    TK_IDENT,
     TK_EOF,       //! 入力の終わりを表すトークン
 };
 
 // トークンの型
 struct Token {
-    int ty;       //! トークンの型
+    TokenKind ty;       //! トークンの型
     int val;      //! tyがTK_NUMの場合、その数値
     std::string reserved; //! tyがTK_RESERVEDの場合
     const char *input;  //! トークン文字列（エラーメッセージ用）
 };
 
-enum {
+enum NodeKind {
     ND_ADD,        //! +
     ND_SUB,        //! -
     ND_MUL,        //! *
@@ -27,14 +28,17 @@ enum {
     ND_LE,         //! <=
     ND_GT,         //! >
     ND_GE,         //! >=
+    ND_ASSIGN,     //! =
+    ND_LVAL,       //! ローカル変数
     ND_NUM,        //! 整数のノードの型
 };
 
 struct Node {
-    int ty;            // 演算子かND_NUM
+    NodeKind ty;            // 演算子かND_NUM
     struct Node *lhs;  // 左辺
     struct Node *rhs;  // 右辺
     int val;           // tyがND_NUMの場合のみ使う
+    int offset;        // tyがND_LVALの場合のみ使う
 };
 
 extern std::vector<Token> tokens;
