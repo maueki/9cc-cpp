@@ -10,12 +10,9 @@
 
 static const char* symbols[] = {"==", "!=", "<=",">="};
 
-// トークナイズした結果のトークン列はこのベクタに保存する
-std::vector<Token> tokens;
-
 // pが指している文字列をトークンに分割してtokensに保存する
-void tokenize(const char *p) {
-    tokens.clear();
+std::vector<Token> tokenize(const char *p) {
+    std::vector<Token> tokens;
 loop:
     while (*p) {
         // 空白文字をスキップ
@@ -58,4 +55,6 @@ loop:
     }
 
     tokens.push_back(Token{TK_EOF, 0, p});
+
+    return tokens;
 }

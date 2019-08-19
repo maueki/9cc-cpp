@@ -4,6 +4,34 @@
 
 static int pos;
 
+struct Context {
+    const std::vector<Token> tokens;
+    size_t pos = 0;
+
+    bool consume(const char* op) {
+        assert(op);
+        if (tokens[pos].ty != TK_RESERVED || tokens[pos].reserved != op) return false;
+        pos++;
+        return true;
+    }
+
+    const Token* consume_ident() {
+        if (tokens[pos].ty == TK_IDENT) return &tokens[pos++];
+
+        return nullptr;
+    }
+
+    bool expect(const char* op) {
+        if (tokens[pos].ty != TK_RESERVED || tokens[pos].reserved != op)
+            error("'%s'ではありません", op);
+        pos++;
+    }
+
+    bool at_eof() {
+        return tokens[pos].ty == TK_EOF;
+    }
+};
+
 Node *new_node(NodeKind ty, Node *lhs, Node *rhs) {
     return new Node{ty, lhs, rhs, 0};
 }
@@ -12,38 +40,15 @@ Node *new_node_num(int val) {
     return new Node{ND_NUM, nullptr, nullptr, val};
 }
 
-bool consume(const char* op) {
-    assert(op);
-    if (tokens[pos].ty != TK_RESERVED || tokens[pos].reserved != op) return false;
-    pos++;
-    return true;
-}
-
-Token* consume_ident() {
-    if (tokens[pos].ty == TK_IDENT) return &tokens[pos++];
-
-    return nullptr;
-}
-
-bool expect(const char* op) {
-    if (tokens[pos].ty != TK_RESERVED || tokens[pos].reserved != op)
-        error("'%s'ではありません", op);
-    pos++;
-}
-
-bool at_eof() {
-    return tokens[pos].ty == TK_EOF;
-}
-
-Node *stmt();
-Node *expr();
-Node *assign();
-Node *equality();
-Node *relational();
-Node *add();
-Node *mul();
-Node *term();
-Node *unary();
+Node *stmt(Context& ctx);
+Node *expr(Context& ctx);
+Node *assign(Context& ctx);
+Node *equality(Context& ctx);
+Node *relational(Context& ctx);
+Node *add(Context& ctx);
+Node *mul(Context& ctx);
+Node *term(Context& ctx);
+Node *unary(Context& ctx);
 
 /// syntax
 ///
@@ -80,108 +85,110 @@ Node *unary();
 /// term: num
 /// term: "(" equality ")"
 
-std::vector<Node*> program() {
+std::vector<Node*> program(const std::vector<Token>& tokens) {
     std::vector<Node*> nodes;
 
-    while(!at_eof()) {
-        nodes.push_back(stmt());
+    Context ctx{tokens};
+
+    while(!ctx.at_eof()) {
+        nodes.push_back(stmt(ctx));
     }
 
     return nodes;
 }
 
-Node *stmt() {
-    Node *node = expr();
-    expect(";");
+Node *stmt(Context& ctx) {
+    Node *node = expr(ctx);
+    ctx.expect(";");
     return node;
 }
 
-Node* expr() {
-    return assign();
+Node* expr(Context& ctx) {
+    return assign(ctx);
 }
 
-Node* assign() {
-    Node* node = equality();
-    if (consume("="))
-        node = new_node(ND_ASSIGN, node ,assign());
+Node* assign(Context& ctx) {
+    Node* node = equality(ctx);
+    if (ctx.consume("="))
+        node = new_node(ND_ASSIGN, node ,assign(ctx));
     return node;
 }
 
-Node *equality() {
-    Node *node = relational();
+Node *equality(Context& ctx) {
+    Node *node = relational(ctx);
 
     for (;;) {
-        if (consume("=="))
-            node = new_node(ND_EQ, node, relational());
-        else if (consume("!="))
-            node = new_node(ND_NE, node, relational());
+        if (ctx.consume("=="))
+            node = new_node(ND_EQ, node, relational(ctx));
+        else if (ctx.consume("!="))
+            node = new_node(ND_NE, node, relational(ctx));
         else
             return node;
     }
 }
 
-Node *relational() {
-    Node *node = add();
+Node *relational(Context& ctx) {
+    Node *node = add(ctx);
 
     for (;;) {
-        if (consume("<"))
-            node = new_node(ND_LT, node, add());
-        else if (consume("<="))
-            node = new_node(ND_LE, node, add());
-        else if (consume(">"))
-            node = new_node(ND_GT, node, add());
-        else if (consume(">="))
-            node = new_node(ND_GE, node, add());
+        if (ctx.consume("<"))
+            node = new_node(ND_LT, node, add(ctx));
+        else if (ctx.consume("<="))
+            node = new_node(ND_LE, node, add(ctx));
+        else if (ctx.consume(">"))
+            node = new_node(ND_GT, node, add(ctx));
+        else if (ctx.consume(">="))
+            node = new_node(ND_GE, node, add(ctx));
         else
             return node;
     }
 }
 
-Node *add() {
-    Node *node = mul();
+Node *add(Context& ctx) {
+    Node *node = mul(ctx);
 
     for (;;) {
-        if (consume("+"))
-            node = new_node(ND_ADD, node, mul());
-        else if (consume("-"))
-            node = new_node(ND_SUB, node, mul());
+        if (ctx.consume("+"))
+            node = new_node(ND_ADD, node, mul(ctx));
+        else if (ctx.consume("-"))
+            node = new_node(ND_SUB, node, mul(ctx));
         else
             return node;
     }
 }
 
-Node *mul() {
-    Node *node = unary();
+Node *mul(Context& ctx) {
+    Node *node = unary(ctx);
 
     for (;;) {
-        if (consume("*"))
-            node = new_node(ND_MUL, node, unary());
-        else if (consume("/"))
-            node = new_node(ND_DIV, node, unary());
+        if (ctx.consume("*"))
+            node = new_node(ND_MUL, node, unary(ctx));
+        else if (ctx.consume("/"))
+            node = new_node(ND_DIV, node, unary(ctx));
         else
             return node;
     }
 }
 
-Node *unary() {
-    if (consume("+"))
-        return term();
-    if (consume("-"))
-        return new_node(ND_SUB, new_node_num(0), term());
-    return term();
+Node *unary(Context& ctx) {
+    if (ctx.consume("+"))
+        return term(ctx);
+    if (ctx.consume("-"))
+        return new_node(ND_SUB, new_node_num(0), term(ctx));
+    return term(ctx);
 }
 
-Node *term() {
+Node *term(Context& ctx) {
     // 次のトークンが'('なら、"(" add ")"のはず
-    if (consume("(")) {
-        Node *node = equality();
-        if (!consume(")"))
+    if (ctx.consume("(")) {
+        Node *node = equality(ctx);
+        if (!ctx.consume(")"))
             error("開きカッコに対応する閉じカッコがありません: %s",
-                  tokens[pos].input);
+                  ctx.tokens[ctx.pos].input);
         return node;
     }
 
-    Token *tok = consume_ident();
+    const Token *tok = ctx.consume_ident();
     if (tok) {
         Node *node = new Node{};
         node->ty = ND_LVAL;
@@ -190,16 +197,11 @@ Node *term() {
     }
 
     // そうでなければ数値のはず
-    if (tokens[pos].ty == TK_NUM) return new_node_num(tokens[pos++].val);
+    if (ctx.tokens[ctx.pos].ty == TK_NUM) return new_node_num(ctx.tokens[ctx.pos++].val);
 
-    error("数値でも変数でも開きカッコでもないトークンです: %s", tokens[pos].input);
+    error("数値でも変数でも開きカッコでもないトークンです: %s", ctx.tokens[ctx.pos].input);
 
     return nullptr;  // unreachable
-}
-
-Node *parse() {
-    pos = 0;
-    return equality();
 }
 
 #ifdef UNIT_TEST

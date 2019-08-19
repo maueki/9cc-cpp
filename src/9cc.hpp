@@ -41,10 +41,8 @@ struct Node {
     int offset;        // tyがND_LVALの場合のみ使う
 };
 
-extern std::vector<Token> tokens;
-
-void tokenize(const char *p);
-std::vector<Node*> program();
+std::vector<Token> tokenize(const char *p);
+std::vector<Node*> program(const std::vector<Token>&);
 void gen(Node *node);
 
 void error(const char *fmt, ...);

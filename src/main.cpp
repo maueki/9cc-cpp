@@ -9,8 +9,8 @@ int main(int argc, char **argv) {
     }
 
     // トークナイズしてパースする
-    tokenize(argv[1]);
-    std::vector<Node*> nodes = program();
+    std::vector<Token> tokens = tokenize(argv[1]);
+    std::vector<Node*> nodes = program(tokens);
 
     // アセンブリの前半部分を出力
     printf(".intel_syntax noprefix\n");
