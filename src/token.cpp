@@ -10,6 +10,19 @@
 
 static const char* symbols[] = {"==", "!=", "<=",">="};
 
+Token new_num_token(int val, const char* input) {
+    return Token{TK_NUM, val, "", "", input};
+}
+
+Token new_reserved_token(const std::string& reserved, const char* input) {
+    return Token{TK_RESERVED, 0, reserved, "", input};
+}
+
+Token new_ident_token(const std::string& ident, const char* input) {
+    return Token{TK_IDENT, 0, "", ident, input};
+}
+
+
 // pが指している文字列をトークンに分割してtokensに保存する
 std::vector<Token> tokenize(const char *p) {
     std::vector<Token> tokens;
@@ -23,7 +36,7 @@ loop:
 
         for (auto &&sym : symbols) {
             if (!strncmp(p, sym, strlen(sym))) {
-                tokens.push_back(Token{TK_RESERVED, 0, sym, p});
+                tokens.push_back(new_reserved_token(sym, p));
                 p += strlen(sym);
                 goto loop;
             }
@@ -31,7 +44,7 @@ loop:
 
         if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
             *p == ')' || *p == '<' || *p == '>' || *p == '=' || *p == ';') {
-            tokens.push_back(Token{TK_RESERVED, 0, std::string(p, 1), p});
+            tokens.push_back(new_reserved_token(std::string(p, 1), p));
             p++;
             continue;
         }
@@ -41,12 +54,15 @@ loop:
             char *tmp = nullptr;
             auto val = strtol(p, &tmp, 10);
             p = tmp;
-            tokens.push_back(Token{TK_NUM, static_cast<int>(val), "", last_p});
+            tokens.push_back(new_num_token(static_cast<int>(val), last_p));
             continue;
         }
 
-        if ('a' <= *p && *p <= 'z') {
-            tokens.push_back(Token{TK_IDENT, 0, "", p++});
+        if ( std::isalpha(*p) || *p == '-' ) {
+            auto epos = std::find_if_not(p, p+1024, [](const char c) {
+                                                        return std::isalnum(c) || c == '_';});
+            tokens.push_back(new_ident_token(std::string(p, epos-p), p));
+            p++;
             continue;
         }
 

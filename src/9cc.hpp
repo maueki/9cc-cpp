@@ -14,6 +14,7 @@ struct Token {
     TokenKind ty;       //! トークンの型
     int val;      //! tyがTK_NUMの場合、その数値
     std::string reserved; //! tyがTK_RESERVEDの場合
+    std::string ident;  //! tyがTK_IDENTの場合
     const char *input;  //! トークン文字列（エラーメッセージ用）
 };
 
