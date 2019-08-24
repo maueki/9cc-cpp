@@ -2,26 +2,34 @@
 
 #include <cassert>
 #include <map>
+#include <optional>
 
 static int pos;
 
-struct Context {
-    const std::vector<Token> tokens;
-    size_t pos = 0;
+class Context {
+    const std::vector<Token> tokens_;
+    size_t pos_ = 0;
 
-    Context(const std::vector<Token> tokens): tokens(tokens) {}
+public:
+    Context(const std::vector<Token> tokens): tokens_(tokens) {}
 
     bool consume(const char* op) {
         assert(op);
-        if (tokens[pos].ty != TK_RESERVED || tokens[pos].reserved != op) return false;
-        pos++;
+        if (tokens_[pos_].ty != TK_RESERVED || tokens_[pos_].reserved != op) return false;
+        pos_++;
         return true;
     }
 
     const Token* consume_ident() {
-        if (tokens[pos].ty == TK_IDENT) return &tokens[pos++];
+        if (tokens_[pos_].ty == TK_IDENT) return &tokens_[pos_++];
 
         return nullptr;
+    }
+
+    std::optional<int> consume_num() {
+        if (tokens_[pos_].ty == TK_NUM) return tokens_[pos_++].val;
+
+        return std::nullopt;
     }
 
     bool expect(const char* op) {
@@ -32,6 +40,10 @@ struct Context {
 
     bool at_eof() const {
         return tokens_[pos_].ty == TK_EOF;
+    }
+
+    const char* now_input() const {
+        return tokens_[pos_].input;
     }
 
 private:
@@ -201,8 +213,7 @@ Node *term(Context& ctx) {
     if (ctx.consume("(")) {
         Node *node = equality(ctx);
         if (!ctx.consume(")"))
-            error("開きカッコに対応する閉じカッコがありません: %s",
-                  ctx.tokens[ctx.pos].input);
+            error("開きカッコに対応する閉じカッコがありません: %s", ctx.now_input());
         return node;
     }
 
@@ -215,9 +226,9 @@ Node *term(Context& ctx) {
     }
 
     // そうでなければ数値のはず
-    if (ctx.tokens[ctx.pos].ty == TK_NUM) return new_node_num(ctx.tokens[ctx.pos++].val);
+    if (auto opt_num = ctx.consume_num()) return new_node_num(opt_num.value());
 
-    error("数値でも変数でも開きカッコでもないトークンです: %s", ctx.tokens[ctx.pos].input);
+    error("数値でも変数でも開きカッコでもないトークンです: %s", ctx.now_input());
 
     return nullptr;  // unreachable
 }
