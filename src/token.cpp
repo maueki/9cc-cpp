@@ -58,11 +58,11 @@ loop:
             continue;
         }
 
-        if ( std::isalpha(*p) || *p == '-' ) {
+        if ( std::isalpha(*p) || *p == '_' ) {
             auto epos = std::find_if_not(p, p+1024, [](const char c) {
                                                         return std::isalnum(c) || c == '_';});
             tokens.push_back(new_ident_token(std::string(p, epos-p), p));
-            p++;
+            p = epos;
             continue;
         }
 

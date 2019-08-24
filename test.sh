@@ -41,5 +41,6 @@ try 0 '1>2;'
 try 0 '1>=2;'
 try 1 '2<1+2;'
 try 2 'a=1;a+1;'
+try 3 'foo=1;bar=2;foo+bar;'
 
 echo OK

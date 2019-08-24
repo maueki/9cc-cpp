@@ -1,12 +1,15 @@
 #include "9cc.hpp"
 
 #include <cassert>
+#include <map>
 
 static int pos;
 
 struct Context {
     const std::vector<Token> tokens;
     size_t pos = 0;
+
+    Context(const std::vector<Token> tokens): tokens(tokens) {}
 
     bool consume(const char* op) {
         assert(op);
@@ -22,13 +25,28 @@ struct Context {
     }
 
     bool expect(const char* op) {
-        if (tokens[pos].ty != TK_RESERVED || tokens[pos].reserved != op)
-            error("'%s'ではありません", op);
-        pos++;
+        if (tokens_[pos_].ty != TK_RESERVED || tokens_[pos_].reserved != op)
+            error("'%s'ではありません: %s", op, now_input());
+        pos_++;
     }
 
-    bool at_eof() {
-        return tokens[pos].ty == TK_EOF;
+    bool at_eof() const {
+        return tokens_[pos_].ty == TK_EOF;
+    }
+
+private:
+    std::map<std::string, size_t> idents_;
+    size_t offset_ = 8;
+
+public:
+    size_t ident_to_offset(const std::string& ident) {
+        if (idents_.count(ident) > 0) {
+            return idents_[ident];
+        }
+
+        idents_[ident] = offset_;
+        offset_ += 8;
+        return idents_[ident];
     }
 };
 
@@ -192,7 +210,7 @@ Node *term(Context& ctx) {
     if (tok) {
         Node *node = new Node{};
         node->ty = ND_LVAL;
-        node->offset = (tok->input[0] - 'a' + 1) * 8;
+        node->offset = ctx.ident_to_offset(tok->ident);
         return node;
     }
 
