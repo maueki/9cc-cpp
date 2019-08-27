@@ -70,6 +70,10 @@ Node *new_node_num(int val) {
     return new Node{ND_NUM, nullptr, nullptr, val};
 }
 
+Node *new_node_return(Node *lhs) {
+    return new Node{ND_RETURN, lhs, nullptr, 0, 0};
+}
+
 Node *stmt(Context& ctx);
 Node *expr(Context& ctx);
 Node *assign(Context& ctx);
@@ -85,6 +89,7 @@ Node *unary(Context& ctx);
 /// program: stmt*
 ///
 /// stmt: expr ";"
+/// stmt: "return" expr ";"
 ///
 /// expr: assign
 ///
@@ -128,6 +133,13 @@ std::vector<Node*> program(const std::vector<Token>& tokens) {
 }
 
 Node *stmt(Context& ctx) {
+
+    if (ctx.consume("return")) {
+        Node *node = expr(ctx);
+        ctx.expect(";");
+        return new_node_return(node);
+    }
+
     Node *node = expr(ctx);
     ctx.expect(";");
     return node;

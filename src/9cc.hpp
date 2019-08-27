@@ -31,6 +31,7 @@ enum NodeKind {
     ND_GE,         //! >=
     ND_ASSIGN,     //! =
     ND_LVAL,       //! ローカル変数
+    ND_RETURN,     //! return
     ND_NUM,        //! 整数のノードの型
 };
 

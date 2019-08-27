@@ -10,6 +10,8 @@
 
 static const char* symbols[] = {"==", "!=", "<=",">="};
 
+static const char* reserved[] = {"return"};
+
 Token new_num_token(int val, const char* input) {
     return Token{TK_NUM, val, "", "", input};
 }
@@ -36,6 +38,16 @@ loop:
 
         for (auto &&sym : symbols) {
             if (!strncmp(p, sym, strlen(sym))) {
+                tokens.push_back(new_reserved_token(sym, p));
+                p += strlen(sym);
+                goto loop;
+            }
+        }
+
+        for (auto &&sym : reserved) {
+            if (!strncmp(p, sym, strlen(sym)) &&
+                !std::isalnum(*(p+strlen(sym))) &&
+                *(p+strlen(sym)) != '_') {
                 tokens.push_back(new_reserved_token(sym, p));
                 p += strlen(sym);
                 goto loop;
