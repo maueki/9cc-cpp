@@ -35,13 +35,39 @@ enum NodeKind {
     ND_NUM,        //! 整数のノードの型
 };
 
-struct Node {
-    NodeKind ty;            // 演算子かND_NUM
-    struct Node *lhs;  // 左辺
-    struct Node *rhs;  // 右辺
-    int val;           // tyがND_NUMの場合のみ使う
-    int offset;        // tyがND_LVALの場合のみ使う
+ struct Node {
+    virtual void gen() = 0;
+    virtual void gen_lval() = 0;
 };
+
+struct NodeGeneral : public Node {
+    int ty;
+    struct Node *lhs;
+    struct Node *rhs;
+
+    NodeGeneral(int ty, Node *lhs, Node *rhs) : ty(ty), lhs(lhs), rhs(rhs) {}
+
+    void gen() override;
+    void gen_lval() override;
+};
+
+struct NodeNum : public Node {
+    int val;
+
+    explicit NodeNum(int val) : val(val) {}
+
+    void gen() override;
+    void gen_lval() override;
+};
+
+struct NodeIdent : public Node {
+    size_t offset;
+
+    explicit NodeIdent(size_t offset) : offset(offset) {}
+
+    void gen() override;
+    void gen_lval() override;
+ };
 
 std::vector<Token> tokenize(const char *p);
 std::vector<Node*> program(const std::vector<Token>&);

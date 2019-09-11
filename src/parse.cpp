@@ -63,15 +63,19 @@ public:
 };
 
 Node *new_node(NodeKind ty, Node *lhs, Node *rhs) {
-    return new Node{ty, lhs, rhs, 0};
+    return new NodeGeneral{ty, lhs, rhs};
 }
 
 Node *new_node_num(int val) {
-    return new Node{ND_NUM, nullptr, nullptr, val};
+    return new NodeNum{val};
 }
 
 Node *new_node_return(Node *lhs) {
-    return new Node{ND_RETURN, lhs, nullptr, 0, 0};
+    return new NodeGeneral{ND_RETURN, lhs, nullptr};
+}
+
+Node *new_node_ident(size_t offset) {
+    return new NodeIdent{offset};
 }
 
 Node *stmt(Context& ctx);
@@ -231,10 +235,7 @@ Node *term(Context& ctx) {
 
     const Token *tok = ctx.consume_ident();
     if (tok) {
-        Node *node = new Node{};
-        node->ty = ND_LVAL;
-        node->offset = ctx.ident_to_offset(tok->ident);
-        return node;
+        return new_node_ident(ctx.ident_to_offset(tok->ident));
     }
 
     // そうでなければ数値のはず

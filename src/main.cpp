@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     printf("  sub rsp, 208\n");
 
     for(auto&& node: nodes) {
-        gen(node);
+        node->gen();
         printf("  pop rax\n");
     }
     // 抽象構文木を下りながらコード生成
