@@ -2,6 +2,14 @@
 
 #include "9cc.hpp"
 
+
+std::string new_label() {
+    static long label_index = 0;
+    char buf[100];
+    sprintf(buf, ".Label%ld", label_index++);
+    return std::string(buf);
+}
+
 void NodeGeneral::gen_lval() {
     error("代入の左辺値が変数ではありません");
 }
@@ -105,7 +113,23 @@ void NodeGeneral::gen() {
 }
 
 void NodeIf::gen() {
+    cond->gen();
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    auto else_label = new_label();
+    printf("  je %s\n", else_label.c_str());
+    then->gen();
+    if (els) {
+        auto end_label = new_label();
+        printf("  jmp %s\n", end_label.c_str());
+        printf("%s:\n", else_label.c_str());
+        els->gen();
+        printf("%s:\n", end_label.c_str());
+    } else {
+        printf("%s:\n", else_label.c_str());
+    }
 }
 
 void NodeIf::gen_lval() {
+    error("代入の左辺値が変数ではありません");
 }
