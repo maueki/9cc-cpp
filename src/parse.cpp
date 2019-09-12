@@ -4,8 +4,6 @@
 #include <map>
 #include <optional>
 
-static int pos;
-
 class Context {
     const std::vector<Token> tokens_;
     size_t pos_ = 0;
@@ -36,6 +34,7 @@ public:
         if (tokens_[pos_].ty != TK_RESERVED || tokens_[pos_].reserved != op)
             error("'%s'ではありません: %s", op, now_input());
         pos_++;
+        return true;
     }
 
     bool at_eof() const {

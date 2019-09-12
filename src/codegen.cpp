@@ -12,7 +12,7 @@ void NodeNum::gen_lval() {
 
 void NodeIdent::gen_lval() {
      printf("  mov rax, rbp\n");
-     printf("  sub rax, %d\n", offset);
+     printf("  sub rax, %ld\n", offset);
      printf("  push rax\n");
  }
 
