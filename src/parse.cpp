@@ -77,6 +77,13 @@ Node *new_node_ident(size_t offset) {
     return new NodeIdent{offset};
 }
 
+Node *new_node_if(Node* cond, Node* then, Node* els) {
+    assert(cond);
+    assert(then);
+
+    return new NodeIf{cond, then, els};
+}
+
 Node *stmt(Context& ctx);
 Node *expr(Context& ctx);
 Node *assign(Context& ctx);
@@ -91,8 +98,11 @@ Node *unary(Context& ctx);
 ///
 /// program: stmt*
 ///
-/// stmt: expr ";"
-/// stmt: "return" expr ";"
+/// stmt: "return" assign ";"
+/// stmt: assign ";"
+/// stmt: ifclause
+///
+/// ifclause: "if" "(" expr ")" stmt ["else" stmt]
 ///
 /// expr: assign
 ///
@@ -141,6 +151,17 @@ Node *stmt(Context& ctx) {
         Node *node = expr(ctx);
         ctx.expect(";");
         return new_node_return(node);
+    } else if (ctx.consume("if")) {
+        if (!ctx.consume("(")) error("'('ではないトークンです: %s", ctx.now_input());
+        auto cond = assign(ctx);
+        if (!ctx.consume(")")) error("')'ではないトークンです: %s", ctx.now_input());
+        auto then = stmt(ctx);
+        if (ctx.consume("else")) {
+            auto els = stmt(ctx);
+            return new_node_if(cond, then, els);
+        } else {
+            return new_node_if(cond, then, nullptr);
+        }
     }
 
     Node *node = expr(ctx);

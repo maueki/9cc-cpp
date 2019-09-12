@@ -10,7 +10,7 @@
 
 static const char* symbols[] = {"==", "!=", "<=",">="};
 
-static const char* reserved[] = {"return"};
+static const char* reserved[] = {"return", "else", "if"};
 
 Token new_num_token(int val, const char* input) {
     return Token{TK_NUM, val, "", "", input};

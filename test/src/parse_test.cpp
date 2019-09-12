@@ -28,11 +28,20 @@ bool operator==(const Node& lhs, const Node& rhs) {
         return l.val == r.val;
     } catch (...) {}
 
+    try {
+        auto l = dynamic_cast<const NodeIf&>(lhs);
+        auto r = dynamic_cast<const NodeIf&>(rhs);
+
+        return *l.cond == *r.cond && *l.then == *r.then &&
+            (l.els == r.els ||
+             (l.els && r.els && *l.els == *r.els));
+    } catch (...) {
+    }
+
     return false;
 }
 
 class ParseTest : public testing::Test {
-
 };
 
 TEST_F(ParseTest, add_test)
@@ -87,4 +96,31 @@ TEST_F(ParseTest, equality_test)
         EXPECT_EQ(*actual, *expect);
     }
 
+    {
+        auto tokens = tokenize("foo+bar;");
+        Node* actual = stmt_test(tokens);
+        Node* expect =
+            new NodeGeneral(ND_ADD, new NodeIdent{8}, new NodeIdent{16});
+        EXPECT_EQ(*actual, *expect);
+    }
+
+    {
+        auto tokens = tokenize("if (1==a) 1; else return 2;");
+        Node* actual = stmt_test(tokens);
+        Node* expect =
+            new NodeIf{new NodeGeneral{ND_EQ, new NodeNum{1}, new NodeIdent{8}},
+                       new NodeNum{1},
+                       new NodeGeneral{ND_RETURN, new NodeNum{2}, nullptr}};
+        EXPECT_EQ(*actual, *expect);
+    }
+
+    {
+        auto tokens = tokenize("if (a==1+1) return a;");
+        Node* actual = stmt_test(tokens);
+        Node* expect =
+            new NodeIf{new NodeGeneral{ND_EQ, new NodeIdent{8},
+                                       new NodeGeneral{ND_ADD, new NodeNum{1}, new NodeNum{1}}},
+                       new NodeGeneral{ND_RETURN, new NodeIdent{8}, nullptr}, nullptr};
+        EXPECT_EQ(*actual, *expect);
+    }
 }

@@ -103,3 +103,9 @@ void NodeGeneral::gen() {
 
     printf("  push rax\n");
 }
+
+void NodeIf::gen() {
+}
+
+void NodeIf::gen_lval() {
+}

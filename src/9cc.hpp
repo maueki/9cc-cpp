@@ -69,6 +69,19 @@ struct NodeIdent : public Node {
     void gen_lval() override;
  };
 
+struct NodeIf : public Node {
+    struct Node* cond;
+    struct Node* then;
+    struct Node* els;
+
+    NodeIf(Node* cond, Node* then, Node* els): cond(cond), then(then), els(els) {}
+
+    void gen() override;
+    void gen_lval() override;
+};
+
+extern std::vector<Token> tokens;
+
 std::vector<Token> tokenize(const char *p);
 std::vector<Node*> program(const std::vector<Token>&);
 void gen(Node *node);
