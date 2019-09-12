@@ -2,16 +2,33 @@
 
 #include "9cc.hpp"
 
-void parser_init();
-Node* equality();
-Node* add();
+Node* stmt_test(const std::vector<Token>& tokens);
 
 bool operator==(const Node& lhs, const Node& rhs) {
-    return lhs.ty == rhs.ty && lhs.val == rhs.val &&
-        ((lhs.lhs == nullptr && rhs.lhs == nullptr) ||
-         (lhs.lhs != nullptr && rhs.lhs != nullptr && (*lhs.lhs == *rhs.lhs))) &&
-        ((lhs.rhs == nullptr && rhs.rhs == nullptr) ||
-         (lhs.rhs != nullptr && rhs.rhs != nullptr && (*lhs.rhs == *rhs.rhs)));
+    try {
+        auto l = dynamic_cast<const NodeGeneral&>(lhs);
+        auto r = dynamic_cast<const NodeGeneral&>(rhs);
+
+        return l.ty == r.ty &&
+               ((l.lhs == nullptr && r.lhs == nullptr) ||
+                (l.lhs != nullptr && r.lhs != nullptr && (*l.lhs == *r.lhs))) &&
+               ((l.rhs == nullptr && r.rhs == nullptr) ||
+                (l.rhs != nullptr && r.rhs != nullptr && (*l.rhs == *r.rhs)));
+    } catch (...) {}
+
+    try {
+        auto l = dynamic_cast<const NodeIdent&>(lhs);
+        auto r = dynamic_cast<const NodeIdent&>(rhs);
+        return l.offset == r.offset;
+    } catch (...) {}
+
+    try {
+        auto l = dynamic_cast<const NodeNum&>(lhs);
+        auto r = dynamic_cast<const NodeNum&>(rhs);
+        return l.val == r.val;
+    } catch (...) {}
+
+    return false;
 }
 
 class ParseTest : public testing::Test {
@@ -21,22 +38,20 @@ class ParseTest : public testing::Test {
 TEST_F(ParseTest, add_test)
 {
     {
-        tokenize("3");
-        parser_init();
-        Node* actual = add();
+        auto tokens = tokenize("3;");
+        Node* actual = stmt_test(tokens);
 
-        Node* expect = new Node{ND_NUM, nullptr, nullptr, 3};
+        Node* expect = new NodeNum{3};
         EXPECT_EQ(*actual, *expect);
     }
 
     {
-        tokenize("3+5");
-        parser_init();
-        Node* actual = add();
+        auto tokens = tokenize("3+5;");
+        Node* actual = stmt_test(tokens);
 
-        Node* expect = new Node{ND_ADD,
-                                new Node{ND_NUM, nullptr, nullptr, 3},
-                                new Node{ND_NUM, nullptr, nullptr, 5}, 0};
+        Node* expect = new NodeGeneral{ND_ADD,
+                                new NodeNum{3},
+                                new NodeNum{5}};
         EXPECT_EQ(*actual, *expect);
     }
 }
@@ -44,36 +59,31 @@ TEST_F(ParseTest, add_test)
 TEST_F(ParseTest, equality_test)
 {
     {
-        tokenize("1==2");
-        parser_init();
-        Node* actual = equality();
-        Node *expect = new Node{ND_EQ, new Node{ND_NUM, nullptr, nullptr, 1},
-                                new Node{ND_NUM, nullptr, nullptr, 2}, 0};
+        auto tokens = tokenize("1==2;");
+        Node* actual = stmt_test(tokens);
+        Node *expect = new NodeGeneral{ND_EQ, new NodeNum{1}, new NodeNum{2}};
         EXPECT_EQ(*actual, *expect);
     }
 
     {
-        tokenize("1<2==2");
-        parser_init();
-        Node* actual = equality();
-        Node* expect = new Node{ND_EQ,
-                                new Node{ND_LT,
-                                         new Node{ND_NUM, nullptr, nullptr, 1},
-                                         new Node{ND_NUM, nullptr, nullptr, 2},
-                                         0},
-                                new Node{ND_NUM, nullptr, nullptr, 2}, 0};
+        auto tokens = tokenize("1<2==2;");
+        Node* actual = stmt_test(tokens);
+        Node* expect = new NodeGeneral{ND_EQ,
+                                       new NodeGeneral{ND_LT,
+                                                       new NodeNum{1},
+                                                       new NodeNum{2}},
+                                       new NodeNum{2}};
         EXPECT_EQ(*actual, *expect);
     }
 
     {
-        tokenize("(1==2)==1");
-        parser_init();
-        Node* actual = equality();
-        Node* expect = new Node{ND_EQ,
-                                new Node{ND_EQ,
-                                         new Node{ND_NUM, nullptr, nullptr, 1},
-                                         new Node{ND_NUM, nullptr, nullptr, 2}, 0},
-                                new Node{ND_NUM, nullptr, nullptr, 1}, 0};
+        auto tokens = tokenize("(1==2)==1;");
+        Node* actual = stmt_test(tokens);
+        Node* expect = new NodeGeneral{ND_EQ,
+                                new NodeGeneral{ND_EQ,
+                                         new NodeNum{1},
+                                         new NodeNum{2}},
+                                new NodeNum{1}};
         EXPECT_EQ(*actual, *expect);
     }
 

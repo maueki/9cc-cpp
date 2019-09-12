@@ -247,7 +247,9 @@ Node *term(Context& ctx) {
 }
 
 #ifdef UNIT_TEST
-void parser_init() {
-    pos = 0;
+Node* stmt_test(const std::vector<Token>& tokens) {
+    Context context{tokens};
+
+    return stmt(context);
 }
 #endif
